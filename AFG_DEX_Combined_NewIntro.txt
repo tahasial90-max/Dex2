@@ -1,0 +1,6024 @@
+--[[
+    AFG x DEX COMBINED LAUNCHER
+    Intro -> Dex Finder -> Afg Joiner
+    Original external endpoints and existing features are retained.
+]]
+
+repeat task.wait() until game:IsLoaded()
+
+-- AFG intro recreated from the user's 5-second reference video.
+-- Built with Roblox GUI objects (no uploaded video asset required).
+local function playAFGIntro()
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+    local player = Players.LocalPlayer
+
+    local guiParent
+    pcall(function()
+        if type(gethui) == "function" then guiParent = gethui() end
+    end)
+    if not guiParent then guiParent = player:WaitForChild("PlayerGui") end
+
+    local old = guiParent:FindFirstChild("AFG_Combined_Intro")
+    if old then old:Destroy() end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "AFG_Combined_Intro"
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+    gui.DisplayOrder = 999999
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = guiParent
+
+    local root = Instance.new("Frame")
+    root.Name = "Background"
+    root.Size = UDim2.fromScale(1, 1)
+    root.BackgroundColor3 = Color3.fromRGB(3, 4, 5)
+    root.BorderSizePixel = 0
+    root.ClipsDescendants = true
+    root.Parent = gui
+
+    local bgGradient = Instance.new("UIGradient")
+    bgGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 2, 8)),
+        ColorSequenceKeypoint.new(0.48, Color3.fromRGB(4, 5, 8)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 22, 10))
+    })
+    bgGradient.Rotation = 0
+    bgGradient.Parent = root
+
+    -- Thin white frame and Afghan-colour accents along its top edge.
+    local border = Instance.new("Frame")
+    border.Name = "Border"
+    border.AnchorPoint = Vector2.new(0.5, 0.5)
+    border.Position = UDim2.fromScale(0.5, 0.5)
+    border.Size = UDim2.fromScale(0.89, 0.855)
+    border.BackgroundTransparency = 1
+    border.BorderSizePixel = 0
+    border.Parent = root
+    local borderStroke = Instance.new("UIStroke")
+    borderStroke.Color = Color3.fromRGB(210, 215, 220)
+    borderStroke.Thickness = 1.2
+    borderStroke.Transparency = 0.22
+    borderStroke.Parent = border
+
+    local function makeBar(parent, name, color, position, size, z)
+        local f = Instance.new("Frame")
+        f.Name = name
+        f.Position = position
+        f.Size = size
+        f.BackgroundColor3 = color
+        f.BorderSizePixel = 0
+        f.ZIndex = z or 2
+        f.Parent = parent
+        return f
+    end
+
+    makeBar(root, "TopWhite", Color3.fromRGB(235,235,235), UDim2.fromScale(0.055,0.071), UDim2.fromScale(0.31,0.003), 3)
+    makeBar(root, "TopRed", Color3.fromRGB(205,28,52), UDim2.fromScale(0.352,0.071), UDim2.fromScale(0.296,0.003), 3)
+    makeBar(root, "TopGreen", Color3.fromRGB(0,145,75), UDim2.fromScale(0.648,0.071), UDim2.fromScale(0.297,0.003), 3)
+
+    -- Soft coloured side glows.
+    local function glow(name, color, pos)
+        local f = Instance.new("Frame")
+        f.Name = name
+        f.AnchorPoint = Vector2.new(0.5,0.5)
+        f.Position = pos
+        f.Size = UDim2.fromScale(0.48,0.9)
+        f.BackgroundColor3 = color
+        f.BackgroundTransparency = 0.94
+        f.BorderSizePixel = 0
+        f.ZIndex = 0
+        f.Parent = root
+        local g = Instance.new("UIGradient")
+        g.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5,0.28),NumberSequenceKeypoint.new(1,1)})
+        g.Parent = f
+        return f
+    end
+    glow("RedGlow", Color3.fromRGB(160,10,30), UDim2.fromScale(0.18,0.5))
+    glow("GreenGlow", Color3.fromRGB(0,120,55), UDim2.fromScale(0.82,0.5))
+
+    local particles = {}
+    for i = 1, 46 do
+        local dot = Instance.new("Frame")
+        local s = math.random(2,4)
+        dot.Name = "Particle"
+        dot.Size = UDim2.fromOffset(s,s)
+        dot.Position = UDim2.fromScale(math.random(),math.random())
+        dot.BackgroundColor3 = (i % 2 == 0) and Color3.fromRGB(190,35,55) or Color3.fromRGB(25,160,90)
+        dot.BackgroundTransparency = math.random(25,65)/100
+        dot.BorderSizePixel = 0
+        dot.ZIndex = 2
+        dot.Parent = root
+        Instance.new("UICorner",dot).CornerRadius = UDim.new(1,0)
+        particles[#particles+1] = dot
+    end
+
+    local function tween(obj, duration, props, style, direction)
+        local info = TweenInfo.new(duration, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out)
+        local tw = TweenService:Create(obj, info, props)
+        tw:Play()
+        return tw
+    end
+
+    -- Radial starburst from the centre, matching the reference's opening rays.
+    local rays = {}
+    for i = 1, 30 do
+        local ray = Instance.new("Frame")
+        ray.Name = "LightRay"
+        ray.AnchorPoint = Vector2.new(0,0.5)
+        ray.Position = UDim2.fromScale(0.5,0.5)
+        ray.Size = UDim2.new(0.01,0,0,1)
+        ray.Rotation = (i-1) * 12
+        ray.BackgroundColor3 = (i % 3 == 0) and Color3.fromRGB(25,130,80) or Color3.fromRGB(145,150,160)
+        ray.BackgroundTransparency = 0.7
+        ray.BorderSizePixel = 0
+        ray.ZIndex = 3
+        ray.Parent = root
+        rays[#rays+1] = ray
+    end
+
+    -- AFG title: separate letters reproduce the white / red / green lettering.
+    local titleHolder = Instance.new("Frame")
+    titleHolder.Name = "AFG_Title"
+    titleHolder.AnchorPoint = Vector2.new(0.5,0.5)
+    titleHolder.Position = UDim2.fromScale(0.5,0.5)
+    titleHolder.Size = UDim2.fromScale(0.42,0.2)
+    titleHolder.BackgroundTransparency = 1
+    titleHolder.ZIndex = 10
+    titleHolder.Parent = root
+
+    local function titleLetter(letter, color, x)
+        local t = Instance.new("TextLabel")
+        t.BackgroundTransparency = 1
+        t.Position = UDim2.fromScale(x,0)
+        t.Size = UDim2.fromScale(0.34,1)
+        t.Font = Enum.Font.GothamBlack
+        t.Text = letter
+        t.TextColor3 = color
+        t.TextScaled = true
+        t.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+        t.TextStrokeTransparency = 0.25
+        t.TextTransparency = 1
+        t.ZIndex = 11
+        t.Parent = titleHolder
+        return t
+    end
+    local a = titleLetter("A",Color3.fromRGB(245,245,245),0)
+    local f = titleLetter("F",Color3.fromRGB(205,35,55),0.33)
+    local g = titleLetter("G",Color3.fromRGB(25,175,95),0.66)
+
+    -- Small moving accent streaks around the logo.
+    local streaks = {}
+    for i = 1, 10 do
+        local red = i % 2 == 1
+        local st = makeBar(root,"AccentStreak",red and Color3.fromRGB(205,35,55) or Color3.fromRGB(235,235,235),
+            UDim2.fromScale((i%2==0) and 0.02 or 0.77,0.34+(i*0.035)),UDim2.fromScale(0.09,0.002),5)
+        st.BackgroundTransparency = 0.15
+        streaks[#streaks+1] = st
+    end
+
+    -- X emblem, initially closed at the centre, then opens outward at the end.
+    local xHolder = Instance.new("Frame")
+    xHolder.Name = "AFG_X_Opening"
+    xHolder.AnchorPoint = Vector2.new(0.5,0.5)
+    xHolder.Position = UDim2.fromScale(0.5,0.5)
+    xHolder.Size = UDim2.fromScale(0.78,0.88)
+    xHolder.BackgroundTransparency = 1
+    xHolder.Visible = false
+    xHolder.ZIndex = 20
+    xHolder.Parent = root
+
+    local function diagonal(name, color, rotation, thickness, transparency)
+        local outer = Instance.new("Frame")
+        outer.Name = name .. "_Outline"
+        outer.AnchorPoint = Vector2.new(0.5,0.5)
+        outer.Position = UDim2.fromScale(0.5,0.5)
+        outer.Size = UDim2.new(0,0,0,thickness+9)
+        outer.Rotation = rotation
+        outer.BackgroundColor3 = Color3.fromRGB(240,242,245)
+        outer.BackgroundTransparency = transparency or 0
+        outer.BorderSizePixel = 0
+        outer.ZIndex = 20
+        outer.Parent = xHolder
+
+        local inner = Instance.new("Frame")
+        inner.Name = name
+        inner.AnchorPoint = Vector2.new(0.5,0.5)
+        inner.Position = UDim2.fromScale(0.5,0.5)
+        inner.Size = UDim2.new(0,0,0,thickness)
+        inner.Rotation = rotation
+        inner.BackgroundColor3 = color
+        inner.BorderSizePixel = 0
+        inner.ZIndex = 21
+        inner.Parent = xHolder
+
+        local shine = Instance.new("Frame")
+        shine.AnchorPoint = Vector2.new(0.5,0.5)
+        shine.Position = UDim2.fromScale(0.5,0.28)
+        shine.Size = UDim2.new(1,0,0,2)
+        shine.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        shine.BackgroundTransparency = 0.65
+        shine.BorderSizePixel = 0
+        shine.ZIndex = 22
+        shine.Parent = inner
+        return outer,inner
+    end
+    local redOuter, redBand = diagonal("RedBand",Color3.fromRGB(190,25,48),45,22)
+    local greenOuter, greenBand = diagonal("GreenBand",Color3.fromRGB(0,135,65),-45,22)
+
+    local emblem = Instance.new("Frame")
+    emblem.Name = "CentreEmblem"
+    emblem.AnchorPoint = Vector2.new(0.5,0.5)
+    emblem.Position = UDim2.fromScale(0.5,0.5)
+    emblem.Size = UDim2.fromOffset(0,0)
+    emblem.BackgroundColor3 = Color3.fromRGB(5,7,9)
+    emblem.BorderSizePixel = 0
+    emblem.ZIndex = 25
+    emblem.Parent = xHolder
+    Instance.new("UICorner",emblem).CornerRadius = UDim.new(1,0)
+    local emblemStroke = Instance.new("UIStroke")
+    emblemStroke.Color = Color3.fromRGB(245,245,245)
+    emblemStroke.Thickness = 3
+    emblemStroke.Parent = emblem
+
+    -- Minimal white arch mark in the centre of the X.
+    local arch = Instance.new("TextLabel")
+    arch.BackgroundTransparency = 1
+    arch.AnchorPoint = Vector2.new(0.5,0.5)
+    arch.Position = UDim2.fromScale(0.5,0.5)
+    arch.Size = UDim2.fromScale(0.65,0.65)
+    arch.Font = Enum.Font.GothamBlack
+    arch.Text = "⌂"
+    arch.TextColor3 = Color3.fromRGB(245,245,245)
+    arch.TextScaled = true
+    arch.TextTransparency = 1
+    arch.ZIndex = 26
+    arch.Parent = emblem
+
+    -- Intro timing follows the reference clip: rays, AFG lettering, then the X opens.
+    task.spawn(function()
+        for _, ray in ipairs(rays) do
+            tween(ray,1.15,{Size=UDim2.new(0.55,0,0,1),BackgroundTransparency=0.35},Enum.EasingStyle.Quart)
+        end
+        task.wait(1.2)
+        tween(a,0.30,{TextTransparency=0,Position=UDim2.fromScale(0,0)},Enum.EasingStyle.Back)
+        task.wait(0.08)
+        tween(f,0.30,{TextTransparency=0},Enum.EasingStyle.Back)
+        task.wait(0.08)
+        tween(g,0.30,{TextTransparency=0},Enum.EasingStyle.Back)
+
+        for i, st in ipairs(streaks) do
+            local targetX = (i%2==0) and 0.88 or 0.03
+            tween(st,0.55,{Position=UDim2.fromScale(targetX,st.Position.Y.Scale),BackgroundTransparency=0.05})
+        end
+        task.wait(0.8)
+
+        tween(titleHolder,0.22,{Size=UDim2.fromScale(0.25,0.12)},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+        tween(titleHolder,0.25,{BackgroundTransparency=1})
+        task.wait(0.1)
+        titleHolder.Visible = false
+        xHolder.Visible = true
+        tween(redOuter,0.62,{Size=UDim2.new(0.9,0,0,31)},Enum.EasingStyle.Back)
+        tween(greenOuter,0.62,{Size=UDim2.new(0.9,0,0,31)},Enum.EasingStyle.Back)
+        tween(redBand,0.62,{Size=UDim2.new(0.9,0,0,22)},Enum.EasingStyle.Back)
+        tween(greenBand,0.62,{Size=UDim2.new(0.9,0,0,22)},Enum.EasingStyle.Back)
+        tween(emblem,0.42,{Size=UDim2.fromOffset(94,94)},Enum.EasingStyle.Back)
+        task.wait(0.12)
+        tween(arch,0.2,{TextTransparency=0})
+        task.wait(0.4)
+        tween(root,0.3,{BackgroundTransparency=1})
+        for _, obj in ipairs(root:GetDescendants()) do
+            if obj:IsA("GuiObject") and obj ~= root then
+                local props = {}
+                if obj:IsA("TextLabel") then props.TextTransparency = 1 end
+                if obj:IsA("Frame") then props.BackgroundTransparency = 1 end
+                if next(props) then tween(obj,0.25,props) end
+            end
+        end
+        task.wait(0.3)
+        gui:Destroy()
+    end)
+end
+
+playAFGIntro()
+
+-- Each original script runs in its own function scope to avoid local-name collisions.
+task.spawn(function()
+    local ok, err = pcall(function()
+-- Deobfuscated by ccjvwsod on Discord
+-- Detected obfuscation: Luraph v15
+-- Local names are inferred from use (the original names are not in the bytecode)
+
+repeat
+	task.wait()
+until game:IsLoaded()
+
+local Players
+Players = game:GetService("Players")
+local UserInputService, RunService, HttpService, Workspace, StarterGui, TextService, localPlayer, viewportSize, touchEnabled, n
+local str, str2, str3, str4, fn, fn2, tbl, n2, fn3, fn4
+local tbl2, tbl3, tbl4, fn5, fn6, tbl5, fn7, fn8, fn9, fn10
+local fn11, fn12, fn13, fn14, fn15, fn16, fn17, fn18, fn19, ScreenGui
+
+do
+	local TweenService = game:GetService("TweenService")
+	UserInputService = game:GetService("UserInputService")
+	RunService = game:GetService("RunService")
+	HttpService = game:GetService("HttpService")
+	local TeleportService = game:GetService("TeleportService")
+	Workspace = game:GetService("Workspace")
+	StarterGui = game:GetService("StarterGui")
+	TextService = game:GetService("TextService")
+	localPlayer = Players.LocalPlayer
+	local result = nil
+
+	if type(gethui) == "function" then
+		local ok
+
+		ok, result = pcall(function()
+			return gethui()
+		end)
+
+		ok = ok and result
+		local v = nil
+
+		if not ok then
+			result = v
+		end
+	end
+
+	if not result then
+		local ok, result2 = pcall(function()
+			return game:GetService("CoreGui")
+		end)
+
+		if ok and result2 then
+			result = result2
+		end
+	end
+
+	result = result or localPlayer:WaitForChild("PlayerGui")
+
+	for _, v in ipairs({ "DexNotifier", "DexNotifier_Main", "DexNotifier_Notifs", "AnnouncementGui" }) do
+		local v2 = result:FindFirstChild(v)
+
+		if v2 then
+			v2:Destroy()
+		end
+	end
+
+	viewportSize = Workspace.CurrentCamera and Workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
+	touchEnabled = UserInputService.TouchEnabled
+	n = touchEnabled and 0.85 or 1
+	str = "https://dexapi1.up.railway.app/usernames"
+	str2 = "https://dexapi1.up.railway.app/blacklisted"
+	str3 = "https://dexapi1.up.railway.app/announcements"
+	str4 = "https://circles-var-although-walk.trycloudflare.com/logs"
+
+	fn = function()
+		return syn and syn.websocket and syn.websocket.connect or WebSocket and WebSocket.connect or fluxus and fluxus.websocket and fluxus.websocket.connect or krnl and krnl.websocket and krnl.websocket.connect or fluxus and fluxus.websocket and fluxus.websocket.connect
+	end
+
+	fn2 = function()
+		return syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or krnl and krnl.request or request
+	end
+
+	tbl = {
+		autoJoin = false,
+		autoForce = false,
+		forceTime = 10,
+		threshold = "10M+",
+		keybind = Enum.KeyCode.RightControl,
+		connected = false,
+		logSoundId = "125621644257669",
+		logSoundEnabled = true,
+		blacklist = {},
+	}
+
+	local tbl6 = {
+		["0M+"] = 0,
+		["10M+"] = 10000000,
+		["20M+"] = 20000000,
+		["50M+"] = 50000000,
+		["100M+"] = 100000000,
+		["300M+"] = 300000000,
+		["500M+"] = 500000000,
+		["1B+"] = 1e9,
+	}
+
+	n2 = 1
+
+	fn3 = function(arg)
+		return (tostring(arg or ""):lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
+	end
+
+	local function fn20()
+		if not readfile or not isfile then
+			return
+		end
+
+		if not isfile("DexNotifier_Config.json") then
+			return
+		end
+
+		pcall(function()
+			local data = HttpService:JSONDecode(readfile("DexNotifier_Config.json"))
+
+			if type(data.autoJoin) == "boolean" then
+				tbl.autoJoin = data.autoJoin
+			end
+
+			if type(data.autoForce) == "boolean" then
+				tbl.autoForce = data.autoForce
+			end
+
+			if type(data.forceTime) == "number" then
+				tbl.forceTime = data.forceTime
+			end
+
+			if type(data.threshold) == "string" then
+				tbl.threshold = data.threshold
+			end
+
+			if type(data.keybind) == "string" then
+				local ok, keybind = pcall(function()
+					return Enum.KeyCode[data.keybind]
+				end)
+
+				if ok and keybind then
+					tbl.keybind = keybind
+				end
+			end
+
+			if type(data.themeIndex) == "number" then
+				n2 = data.themeIndex
+			end
+
+			if type(data.logSoundId) == "string" and data.logSoundId ~= "" then
+				tbl.logSoundId = data.logSoundId
+			end
+
+			if type(data.logSoundEnabled) == "boolean" then
+				tbl.logSoundEnabled = data.logSoundEnabled
+			end
+
+			if type(data.blacklist) == "table" then
+				tbl.blacklist = {}
+
+				for k, v in pairs(data.blacklist) do
+					if type(k) == "string" then
+						v = type(v) == "string" and v or k
+						tbl.blacklist[fn3(k)] = v
+					end
+				end
+			end
+		end)
+	end
+
+	fn4 = function()
+		if not writefile then
+			return
+		end
+
+		pcall(function()
+			writefile("DexNotifier_Config.json", HttpService:JSONEncode({
+				autoJoin = tbl.autoJoin,
+				autoForce = tbl.autoForce,
+				forceTime = tbl.forceTime,
+				threshold = tbl.threshold,
+				keybind = tbl.keybind.Name,
+				themeIndex = n2,
+				logSoundId = tbl.logSoundId,
+				logSoundEnabled = tbl.logSoundEnabled,
+				blacklist = tbl.blacklist,
+			}))
+		end)
+	end
+
+	fn20()
+
+	tbl2 = {
+		tab = "Logs",
+		detected = 0,
+		history = {},
+		bl = { known = {}, modal = nil, refresh = nil, applyFilter = nil },
+	}
+
+	tbl3 = {
+		bg = Color3.fromRGB(10, 11, 16),
+		bgGradient = Color3.fromRGB(15, 17, 24),
+		topBg = Color3.fromRGB(14, 16, 22),
+		sidebarBg = Color3.fromRGB(12, 13, 18),
+		elementBg = Color3.fromRGB(18, 20, 28),
+		elementHover = Color3.fromRGB(26, 30, 42),
+		stroke = Color3.fromRGB(35, 40, 55),
+		strokeHover = Color3.fromRGB(55, 65, 90),
+		border = Color3.fromRGB(30, 35, 48),
+		text = Color3.fromRGB(245, 245, 250),
+		textDark = Color3.fromRGB(150, 160, 180),
+		muted = Color3.fromRGB(110, 120, 140),
+		accent = Color3.fromRGB(110, 80, 255),
+		accentHover = Color3.fromRGB(150, 120, 255),
+		accentDark = Color3.fromRGB(80, 50, 220),
+		accentAlt = Color3.fromRGB(80, 150, 255),
+		green = Color3.fromRGB(20, 220, 130),
+		red = Color3.fromRGB(240, 70, 90),
+		redDark = Color3.fromRGB(70, 20, 25),
+		orange = Color3.fromRGB(255, 160, 30),
+		font = Enum.Font.GothamMedium,
+		fontBold = Enum.Font.GothamBold,
+		fontLight = Enum.Font.Gotham,
+	}
+
+	tbl4 = {}
+	local tbl7 = { name = "Basic (Rarity)", color = Color3.fromRGB(200, 200, 200), isBasic = true }
+	local tbl8 = { name = "Dex Purple", color = Color3.fromRGB(110, 80, 255) }
+	local tbl9 = { name = "Neon Blue", color = Color3.fromRGB(0, 180, 255) }
+	local tbl10 = { name = "Cyber Purple", color = Color3.fromRGB(160, 80, 255) }
+	local tbl11 = { name = "Toxic Green", color = Color3.fromRGB(0, 230, 110) }
+	local tbl12 = { name = "Crimson Red", color = Color3.fromRGB(255, 50, 70) }
+	local tbl13 = { name = "Golden Amber", color = Color3.fromRGB(255, 170, 0) }
+	local tbl14 = { name = "Rainbow", color = Color3.fromRGB(255, 255, 255), isRainbow = true }
+	tbl4[1] = tbl7
+	tbl4[2] = tbl8
+	tbl4[3] = tbl9
+	tbl4[4] = tbl10
+	tbl4[5] = tbl11
+	tbl4[6] = tbl12
+	tbl4[7] = tbl13
+	tbl4[8] = tbl14
+
+	if tbl4[n2] and not tbl4[n2].isBasic and not tbl4[n2].isRainbow then
+		local color = tbl4[n2].color
+		tbl3.accent = color
+		local v, v2, v3 = color:ToHSV()
+		tbl3.accentHover = Color3.fromHSV(v, v2, math.min(1, v3 + 0.2))
+		tbl3.accentDark = Color3.fromHSV(v, v2, math.max(0, v3 - 0.4))
+	end
+
+	fn5 = nil
+	fn6 = nil
+	tbl5 = { [localPlayer.Name] = true }
+	local tbl15 = { Lyubomyr_2012 = "Owner", Brainrot10071985 = "Co-Owner" }
+
+	fn7 = function(arg)
+		return tbl15[arg] ~= nil
+	end
+
+	local tbl16 = { None = true, None = true }
+
+	fn8 = function(arg)
+		return tbl16[arg] == true
+	end
+
+	fn9 = function(arg)
+		if tbl15[arg] then
+			return tbl15[arg]
+		end
+
+		if fn8(arg) then
+			return "Dex Finder Designer"
+		end
+		return "Dex User"
+	end
+
+	local flag = false
+	local tbl17 = {}
+	fn10 = nil
+
+	fn11 = function(arg, arg2)
+		local instance = Instance.new(arg)
+		local v = pairs
+		local tbl18 = arg2 or {}
+
+		for k, v2 in v(tbl18) do
+			if k ~= "Parent" then
+				instance[k] = v2
+			end
+		end
+
+		if arg == "UIStroke" then
+			pcall(function()
+				instance.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			end)
+		end
+
+		if arg == "TextLabel" or arg == "TextButton" or arg == "TextBox" then
+			pcall(function()
+				instance.LineHeight = 1.1
+			end)
+		end
+
+		if (arg == "TextButton" or arg == "ImageButton") and nil then
+			instance.MouseButton1Click:Connect(function()
+				if fn10 then
+					fn10(nil, 0.35, 1)
+				end
+			end)
+		end
+
+		if arg2 and arg2.Parent then
+			instance.Parent = arg2.Parent
+		end
+
+		if not flag then
+			tbl17[instance] = arg
+		end
+
+		return instance
+	end
+
+	fn12 = function(arg, arg2, arg3, arg4, arg5)
+		if not arg or not arg.Parent then
+			return
+		end
+		local tweenInfo = TweenInfo.new(arg3 or 0.35, arg4 or Enum.EasingStyle.Quint, arg5 or Enum.EasingDirection.Out)
+
+		pcall(function()
+			TweenService:Create(arg, tweenInfo, arg2):Play()
+		end)
+	end
+
+	local n3 = 0
+	local n4 = 6
+
+	fn10 = function(arg, volume, arg2)
+		if n3 >= n4 then
+			return
+		end
+		n3 += 1
+
+		task.spawn(function()
+			pcall(function()
+				local sound = Instance.new("Sound")
+				sound.SoundId = "rbxassetid://" .. arg
+				sound.Volume = volume or 1
+				local v = arg2
+				local playbackSpeed
+
+				if arg2 then
+					playbackSpeed = v
+				else
+					playbackSpeed = 1
+				end
+
+				sound.PlaybackSpeed = playbackSpeed
+				sound.Parent = game:GetService("SoundService")
+				sound:Play()
+				sound.Ended:Wait()
+				sound:Destroy()
+			end)
+
+			n3 -= 1
+		end)
+	end
+
+	fn13 = function(arg, arg2)
+		if arg2 then
+			return Color3.fromRGB(255, 60, 200)
+		end
+		local n5 = tonumber(arg) or 0
+		if n5 >= 1e12 then
+			return Color3.fromRGB(255, 130, 50)
+		end
+
+		if n5 >= 1e9 then
+			return Color3.fromRGB(255, 215, 0)
+		end
+
+		if n5 >= 300000000 then
+			return Color3.fromRGB(150, 90, 255)
+		end
+
+		if n5 >= 100000000 then
+			return Color3.fromRGB(255, 80, 80)
+		end
+
+		if n5 >= 50000000 then
+			return Color3.fromRGB(80, 180, 255)
+		end
+
+		if n5 >= 10000000 then
+			return Color3.fromRGB(50, 220, 120)
+		end
+		return tbl3.accentHover
+	end
+
+	fn14 = function(arg)
+		if not arg then
+			return 0
+		end
+		local str5 = tostring(arg):gsub("%s+", ""):lower()
+		local n5 = tonumber(str5:match("[%d%.]+")) or 0
+		if str5:find("q") then
+			return n5 * 1e15
+		end
+
+		if str5:find("t") then
+			return n5 * 1e12
+		end
+
+		if str5:find("b") then
+			return n5 * 1e9
+		end
+
+		if str5:find("m") then
+			return n5 * 1000000
+		end
+
+		if str5:find("k") then
+			return n5 * 1000
+		end
+		return n5
+	end
+
+	fn15 = function(arg)
+		local n5 = tonumber(arg) or 0
+
+		local function fn21(arg2, arg3)
+			return string.format("$%.1f%s/s", arg2, arg3):gsub("%.0", "")
+		end
+
+		if n5 >= 1e15 then
+			return fn21(n5 / 1e15, "Q")
+		end
+
+		if n5 >= 1e12 then
+			return fn21(n5 / 1e12, "T")
+		end
+
+		if n5 >= 1e9 then
+			return fn21(n5 / 1e9, "B")
+		end
+
+		if n5 >= 1000000 then
+			return fn21(n5 / 1000000, "M")
+		end
+
+		if n5 >= 1000 then
+			return fn21(n5 / 1000, "K")
+		end
+		return "$" .. tostring(math.floor(n5)) .. "/s"
+	end
+
+	local function fn21(arg)
+		return tbl6[arg] or 0
+	end
+
+	fn16 = function(arg)
+		if not arg then
+			return false
+		end
+		return (tonumber(arg.mps) or 0) >= fn21(tbl.threshold)
+	end
+
+	fn17 = function()
+		return os.date("%H:%M:%S")
+	end
+
+	fn18 = function(arg)
+		if not arg or arg == "" then
+			return
+		end
+
+		pcall(function()
+			TeleportService:TeleportToPlaceInstance(game.PlaceId, arg, localPlayer)
+		end)
+	end
+
+	fn19 = function(arg, arg2)
+		if not arg or arg == "" then
+			return
+		end
+		local n5 = os.clock() + (arg2 or tbl.forceTime or 10)
+
+		task.spawn(function()
+			while os.clock() < n5 do
+				pcall(function()
+					TeleportService:TeleportToPlaceInstance(game.PlaceId, arg, localPlayer)
+				end)
+
+				task.wait(2.5)
+			end
+		end)
+	end
+
+	ScreenGui = fn11("ScreenGui", {
+		Name = "DexNotifier_Main",
+		ResetOnSpawn = false,
+		IgnoreGuiInset = true,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		Parent = result,
+	})
+end
+
+local Frame
+local udim2 = touchEnabled and UDim2.new(0, 500, 0, 320) or UDim2.new(0, 680, 0, 440)
+
+Frame = fn11("Frame", {
+	Name = "Main",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	Size = udim2,
+	BackgroundColor3 = Color3.fromRGB(10, 11, 16),
+	BackgroundTransparency = 0.15,
+	BorderSizePixel = 0,
+	ClipsDescendants = true,
+	ZIndex = 1,
+	Parent = ScreenGui,
+})
+
+fn11("UICorner", { CornerRadius = UDim.new(0, 28), Parent = Frame })
+local UIScale
+UIScale = fn11("UIScale", { Scale = n, Parent = Frame })
+
+fn11("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 17, 24)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 9, 14)),
+	}),
+	Rotation = 150,
+	Parent = Frame,
+})
+
+local ImageLabel
+
+ImageLabel = fn11("ImageLabel", {
+	Size = UDim2.new(1.5, 0, 1.5, 0),
+	Position = UDim2.new(-0.25, 0, -0.25, 0),
+	BackgroundTransparency = 1,
+	Image = "rbxassetid://12224031644",
+	ImageColor3 = tbl3.accent,
+	ImageTransparency = 0.5,
+	ZIndex = 1,
+	Parent = Frame,
+})
+
+local ImageLabel2
+
+ImageLabel2 = fn11("ImageLabel", {
+	Size = UDim2.new(1.2, 0, 1.2, 0),
+	Position = UDim2.new(0.1, 0, 0.1, 0),
+	BackgroundTransparency = 1,
+	Image = "rbxassetid://12224031644",
+	ImageColor3 = tbl3.accentAlt,
+	ImageTransparency = 0.5,
+	ZIndex = 1,
+	Parent = Frame,
+})
+
+task.spawn(function()
+	local rotation = 0
+
+	RunService.Heartbeat:Connect(function(deltaTime)
+		rotation = (rotation + deltaTime * 3) % 360
+
+		if ImageLabel then
+			ImageLabel.Rotation = rotation
+		end
+
+		if ImageLabel2 then
+			ImageLabel2.Rotation = -rotation * 0.7
+		end
+	end)
+end)
+
+local UIStroke
+
+UIStroke = fn11("UIStroke", {
+	Color = tbl3.accent,
+	Transparency = 0.4,
+	Thickness = 1.5,
+	ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	Parent = Frame,
+})
+
+local Frame2, Frame3, TextLabel, fn20, Frame4, UIStroke2, fn21, Frame5, UIStroke3, TextButton
+local fn22, TextLabel2, ScrollingFrame, UIListLayout, fn23, tbl6, fn24, fn25, ScrollingFrame2, UIListLayout2
+local fn26, fn27
+
+do
+	local n3 = touchEnabled and 120 or 160
+
+	local Frame6 = fn11("Frame", {
+		Size = UDim2.new(0, n3, 1, 0),
+		Position = UDim2.new(0, 0, 0, 0),
+		BackgroundColor3 = Color3.fromRGB(8, 9, 14),
+		BackgroundTransparency = 0.15,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = Frame,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 28), Parent = Frame6 })
+
+	fn11("Frame", {
+		Size = UDim2.new(0, 28, 1, 0),
+		Position = UDim2.new(1, -28, 0, 0),
+		BackgroundColor3 = Color3.fromRGB(8, 9, 14),
+		BackgroundTransparency = 0.15,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = Frame6,
+	})
+
+	Frame2 = fn11("Frame", {
+		Size = UDim2.new(0, 1, 0.9, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(1, 0, 0.5, 0),
+		BackgroundColor3 = tbl3.accent,
+		BackgroundTransparency = 0.7,
+		BorderSizePixel = 0,
+		ZIndex = 3,
+		Parent = Frame6,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame2 })
+
+	Frame3 = fn11("Frame", {
+		Size = UDim2.new(1, -(n3 + 4), 1, 0),
+		Position = UDim2.new(0, n3 + 4, 0, 0),
+		BackgroundTransparency = 1,
+		ZIndex = 2,
+		Parent = Frame,
+	})
+
+	local Frame7 = fn11("Frame", { Size = UDim2.new(1, 0, 0, 60), BackgroundTransparency = 1, ZIndex = 3, Parent = Frame6 })
+
+	fn11("TextLabel", {
+		Size = UDim2.new(1, 0, 1, 0),
+		Position = UDim2.new(0, 16, 0, 0),
+		BackgroundTransparency = 1,
+		Text = "DEX",
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = 18,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 4,
+		Parent = Frame7,
+	})
+
+	TextLabel = fn11("TextLabel", {
+		Size = UDim2.new(1, 0, 1, 0),
+		Position = UDim2.new(0, 60, 0, 0),
+		BackgroundTransparency = 1,
+		Text = "NOTIFIER",
+		TextColor3 = tbl3.accent,
+		TextSize = 18,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 4,
+		Parent = Frame7,
+	})
+
+	local Frame8 = fn11("Frame", {
+		Size = UDim2.new(0, 6, 0, 6),
+		Position = UDim2.new(0, 16, 0, 44),
+		BackgroundColor3 = tbl3.muted,
+		BorderSizePixel = 0,
+		ZIndex = 4,
+		Parent = Frame7,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame8 })
+
+	local TextLabel3 = fn11("TextLabel", {
+		Size = UDim2.new(1, -30, 0, 16),
+		Position = UDim2.new(0, 28, 0, 39),
+		BackgroundTransparency = 1,
+		Text = "Idle",
+		TextColor3 = tbl3.muted,
+		TextSize = 11,
+		Font = tbl3.font,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 4,
+		Parent = Frame7,
+	})
+
+	fn20 = function(connected, arg)
+		tbl.connected = connected
+		local text = arg or connected and "Connected" or "Idle"
+		local green = connected and tbl3.green or tbl3.muted
+
+		if not connected and arg then
+			local str5 = tostring(arg):lower()
+
+			if str5:find("connect") or str5:find("reconnect") then
+				green = tbl3.orange
+			elseif str5:find("fail") or str5:find("error") then
+				green = tbl3.red
+			end
+		end
+
+		fn12(Frame8, { BackgroundColor3 = green })
+		fn12(TextLabel3, { TextColor3 = green })
+		TextLabel3.Text = text
+	end
+
+	local Frame9 = fn11("Frame", {
+		Size = UDim2.new(1, 0, 1, -120),
+		Position = UDim2.new(0, 0, 0, 70),
+		BackgroundTransparency = 1,
+		ZIndex = 3,
+		Parent = Frame6,
+	})
+
+	fn11("UIListLayout", {
+		Padding = UDim.new(0, 4),
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		Parent = Frame9,
+	})
+
+	Frame4 = fn11("Frame", {
+		Size = UDim2.new(1, -16, 0, 36),
+		Position = UDim2.new(0, 8, 0, 0),
+		BackgroundColor3 = tbl3.accent,
+		BackgroundTransparency = 0.8,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = Frame6,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 8), Parent = Frame4 })
+	UIStroke2 = fn11("UIStroke", { Color = tbl3.accent, Transparency = 0.3, Thickness = 1, Parent = Frame4 })
+	local tbl7 = {}
+	local tbl8 = {}
+	local tbl9 = { Logs = 0, History = 1, Users = 2, Settings = 3 }
+
+	fn21 = function()
+		for k, v in pairs(tbl7) do
+			local flag = k == tbl2.tab
+
+			if flag then
+				fn12(v, { TextColor3 = tbl3.text, BackgroundTransparency = 1 })
+				v.Font = tbl3.fontBold
+
+				fn12(Frame4, {
+					Position = UDim2.new(0, 8, 0, 70 + (tbl9[k] or 0) * 40),
+					Size = UDim2.new(1, -16, 0, 36),
+				}, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+			else
+				fn12(v, { TextColor3 = tbl3.textDark })
+				v.Font = tbl3.font
+			end
+
+			if tbl8[k] then
+				if flag then
+					tbl8[k].Visible = true
+					tbl8[k].GroupTransparency = 1
+					fn12(tbl8[k], { GroupTransparency = 0 }, 0.3)
+				else
+					tbl8[k].Visible = false
+				end
+			end
+		end
+	end
+
+	for _, v in ipairs({ "Logs", "History", "Users", "Settings" }) do
+		local TextButton2 = fn11("TextButton", {
+			Size = UDim2.new(1, -20, 0, 36),
+			BackgroundTransparency = 1,
+			Text = v,
+			TextColor3 = tbl3.textDark,
+			TextSize = 13,
+			Font = tbl3.font,
+			AutoButtonColor = false,
+			ZIndex = 4,
+			Parent = Frame9,
+		})
+
+		TextButton2.MouseEnter:Connect(function()
+			if v ~= tbl2.tab then
+				fn12(TextButton2, { TextColor3 = tbl3.text })
+			end
+		end)
+
+		TextButton2.MouseLeave:Connect(function()
+			if v ~= tbl2.tab then
+				fn12(TextButton2, { TextColor3 = tbl3.textDark })
+			end
+		end)
+
+		TextButton2.MouseButton1Click:Connect(function()
+			tbl2.tab = v
+			fn21()
+		end)
+
+		tbl7[v] = TextButton2
+	end
+
+	local TextButton2 = fn11("TextButton", {
+		Size = UDim2.new(1, -24, 0, 34),
+		Position = UDim2.new(0, 12, 1, -42),
+		BackgroundColor3 = Color3.fromRGB(25, 28, 38),
+		BackgroundTransparency = 0.4,
+		Text = "Hide UI",
+		TextColor3 = tbl3.textDark,
+		TextSize = 12,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 4,
+		Parent = Frame6,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = TextButton2 })
+	fn11("UIStroke", { Color = Color3.fromRGB(40, 45, 60), Transparency = 0.4, Thickness = 1, Parent = TextButton2 })
+
+	TextButton2.MouseEnter:Connect(function()
+		fn12(TextButton2, { BackgroundTransparency = 0.1, TextColor3 = tbl3.text })
+	end)
+
+	TextButton2.MouseLeave:Connect(function()
+		fn12(TextButton2, { BackgroundTransparency = 0.4, TextColor3 = tbl3.textDark })
+	end)
+
+	Frame5 = fn11("Frame", {
+		Size = UDim2.new(0, 52, 0, 52),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		BackgroundColor3 = Color3.fromRGB(12, 13, 18),
+		BackgroundTransparency = 0.1,
+		Visible = false,
+		ZIndex = 100,
+		Parent = ScreenGui,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame5 })
+	UIStroke3 = fn11("UIStroke", { Color = tbl3.accent, Transparency = 0.2, Thickness = 2, Parent = Frame5 })
+
+	TextButton = fn11("TextButton", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "DX",
+		TextColor3 = tbl3.accent,
+		Font = tbl3.fontBold,
+		TextSize = 18,
+		Parent = Frame5,
+	})
+
+	TextButton2.MouseButton1Click:Connect(function()
+		fn12(UIScale, { Scale = 0 }, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+
+		task.delay(0.4, function()
+			Frame.Visible = false
+			Frame5.Visible = true
+			Frame5.Size = UDim2.new(0, 0, 0, 0)
+			fn12(Frame5, { Size = UDim2.new(0, 50, 0, 50) }, 0.4, Enum.EasingStyle.Back)
+		end)
+	end)
+
+	local flag = false
+	local flag2 = false
+	local position = nil
+	local position2 = nil
+
+	TextButton.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag = true
+			flag2 = false
+			position = input.Position
+			position2 = Frame5.Position
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag = false
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if flag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local n4 = input.Position - position
+
+			if n4.Magnitude > 10 then
+				flag2 = true
+				Frame5.Position = UDim2.new(position2.X.Scale, position2.X.Offset + n4.X, position2.Y.Scale, position2.Y.Offset + n4.Y)
+			end
+		end
+	end)
+
+	TextButton.MouseButton1Click:Connect(function()
+		if not flag2 then
+			fn12(Frame5, { Size = UDim2.new(0, 0, 0, 0) }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+
+			task.delay(0.3, function()
+				Frame5.Visible = false
+				Frame.Visible = true
+				fn12(UIScale, { Scale = n }, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+			end)
+		end
+	end)
+
+	local TextButton3 = fn11("TextButton", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+		Text = "",
+		ZIndex = 10,
+		Parent = Frame,
+	})
+
+	local flag3 = false
+	local position3 = nil
+	local position4 = nil
+
+	TextButton3.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag3 = true
+			position3 = input.Position
+			position4 = Frame.Position
+		end
+	end)
+
+	TextButton3.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag3 = false
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if flag3 and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local n4 = (input.Position - position3) / UIScale.Scale
+			Frame.Position = UDim2.new(position4.X.Scale, position4.X.Offset + n4.X, position4.Y.Scale, position4.Y.Offset + n4.Y)
+		end
+	end)
+
+	fn22 = function(arg, arg2, arg3, arg4, arg5)
+		local Frame10 = fn11("Frame", {
+			Size = UDim2.new(1, 0, 0, 48),
+			Position = UDim2.new(0, 0, 0, arg2),
+			BackgroundColor3 = Color3.fromRGB(18, 20, 28),
+			BackgroundTransparency = 0.3,
+			BorderSizePixel = 0,
+			ZIndex = 3,
+			Parent = arg,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(0, 12), Parent = Frame10 })
+		fn11("UIStroke", { Color = Color3.fromRGB(40, 45, 60), Transparency = 0.3, Thickness = 1, Parent = Frame10 })
+
+		fn11("TextLabel", {
+			Size = UDim2.new(0, 200, 1, 0),
+			Position = UDim2.new(0, 14, 0, 0),
+			BackgroundTransparency = 1,
+			Text = arg3,
+			TextColor3 = tbl3.text,
+			TextSize = 12,
+			Font = tbl3.fontBold,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 4,
+			Parent = Frame10,
+		})
+
+		local TextButton4 = fn11("TextButton", {
+			Name = "SwitchBg_" .. arg4,
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -12, 0.5, 0),
+			Size = UDim2.new(0, 44, 0, 24),
+			BackgroundColor3 = Color3.fromRGB(35, 40, 50),
+			BorderSizePixel = 0,
+			Text = "",
+			AutoButtonColor = false,
+			ZIndex = 4,
+			Parent = Frame10,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = TextButton4 })
+
+		local Frame11 = fn11("Frame", {
+			Size = UDim2.new(0, 20, 0, 20),
+			Position = UDim2.new(0, 2, 0.5, -10),
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BorderSizePixel = 0,
+			ZIndex = 5,
+			Parent = TextButton4,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame11 })
+
+		local function fn28()
+			local v = tbl[arg4]
+			fn12(TextButton4, { BackgroundColor3 = v and tbl3.accent or Color3.fromRGB(35, 40, 50) }, 0.3)
+			fn12(Frame11, { Position = v and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10) }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		end
+
+		fn28()
+
+		TextButton4.MouseButton1Click:Connect(function()
+			tbl[arg4] = not tbl[arg4]
+			fn28()
+			fn4()
+
+			if arg5 then
+				arg5(tbl[arg4])
+			end
+		end)
+
+		return Frame10
+	end
+
+	local CanvasGroup = fn11("CanvasGroup", {
+		Size = UDim2.new(1, -32, 1, -32),
+		Position = UDim2.new(0, 16, 0, 16),
+		BackgroundTransparency = 1,
+		ZIndex = 2,
+		Parent = Frame3,
+	})
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 3),
+		PaddingBottom = UDim.new(0, 3),
+		PaddingLeft = UDim.new(0, 3),
+		PaddingRight = UDim.new(0, 3),
+		Parent = CanvasGroup,
+	})
+
+	tbl8.Logs = CanvasGroup
+
+	local Frame10 = fn11("Frame", {
+		Size = UDim2.new(1, 0, 0, 44),
+		Position = UDim2.new(0, 0, 0, 0),
+		BackgroundTransparency = 1,
+		ZIndex = 3,
+		Parent = CanvasGroup,
+	})
+
+	local v = fn22(Frame10, 0, "Auto-Join", "autoJoin")
+	v.Size = UDim2.new(0.48, 0, 0, 44)
+	v.Position = UDim2.new(0, 0, 0, 0)
+	local v2 = fn22(Frame10, 0, "Auto-Force", "autoForce")
+	v2.Size = UDim2.new(0.48, 0, 0, 44)
+	v2.Position = UDim2.new(0.52, 0, 0, 0)
+
+	local Frame11 = fn11("Frame", {
+		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0, 0, 0, 52),
+		BackgroundTransparency = 1,
+		ZIndex = 3,
+		Parent = CanvasGroup,
+	})
+
+	local TextLabel4 = fn11("TextLabel", {
+		Size = UDim2.new(0, 80, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "LIVE FEED",
+		TextColor3 = tbl3.accent,
+		TextSize = 11,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 4,
+		Parent = Frame11,
+	})
+
+	TextLabel2 = fn11("TextLabel", {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -56, 0, 0),
+		Size = UDim2.new(0, 80, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "0 detected",
+		TextColor3 = tbl3.muted,
+		TextSize = 11,
+		Font = tbl3.font,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		ZIndex = 4,
+		Parent = Frame11,
+	})
+
+	local TextButton4 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, 0, 0.5, 0),
+		Size = UDim2.new(0, 48, 0, 20),
+		BackgroundColor3 = tbl3.redDark,
+		BackgroundTransparency = 0.5,
+		Text = "Clear",
+		TextColor3 = tbl3.red,
+		TextSize = 10,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 4,
+		Parent = Frame11,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 6), Parent = TextButton4 })
+
+	TextButton4.MouseEnter:Connect(function()
+		fn12(TextButton4, { BackgroundTransparency = 0, TextColor3 = tbl3.text })
+	end)
+
+	TextButton4.MouseLeave:Connect(function()
+		fn12(TextButton4, { BackgroundTransparency = 0.5, TextColor3 = tbl3.red })
+	end)
+
+	local Frame12 = fn11("Frame", {
+		Size = UDim2.new(1, 0, 1, -76),
+		Position = UDim2.new(0, 0, 0, 76),
+		BackgroundColor3 = Color3.fromRGB(12, 13, 18),
+		BackgroundTransparency = 0.5,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = CanvasGroup,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 12), Parent = Frame12 })
+	fn11("UIStroke", { Color = tbl3.stroke, Transparency = 0.5, Thickness = 1, Parent = Frame12 })
+
+	ScrollingFrame = fn11("ScrollingFrame", {
+		Size = UDim2.new(1, -8, 1, -8),
+		Position = UDim2.new(0, 4, 0, 4),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ScrollBarThickness = 2,
+		ScrollBarImageColor3 = tbl3.accent,
+		ZIndex = 3,
+		Parent = Frame12,
+	})
+
+	UIListLayout = fn11("UIListLayout", { Padding = UDim.new(0, 8), Parent = ScrollingFrame })
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		Parent = ScrollingFrame,
+	})
+
+	fn23 = function(arg, arg2)
+		task.defer(function()
+			if arg and arg2 then
+				arg.CanvasSize = UDim2.new(0, 0, 0, arg2.AbsoluteContentSize.Y + 100)
+			end
+		end)
+	end
+
+	tbl6 = {}
+
+	TextButton4.MouseButton1Click:Connect(function()
+		for _, child in ipairs(ScrollingFrame:GetChildren()) do
+			if child:IsA("Frame") and child.Name == "EntryWrapper" then
+				fn12(child, { Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1 }, 0.3)
+
+				for _, descendant in ipairs(child:GetDescendants()) do
+					if descendant:IsA("TextLabel") then
+						fn12(descendant, { TextTransparency = 1 }, 0.3)
+					end
+
+					if descendant:IsA("Frame") then
+						fn12(descendant, { BackgroundTransparency = 1 }, 0.3)
+					end
+
+					if descendant:IsA("ImageLabel") then
+						fn12(descendant, { ImageTransparency = 1 }, 0.3)
+					end
+				end
+
+				task.delay(0.3, function()
+					child:Destroy()
+				end)
+			end
+		end
+
+		tbl2.detected = 0
+		TextLabel2.Text = "0 detected"
+		fn23(ScrollingFrame, UIListLayout)
+	end)
+
+	fn24 = function(arg)
+		if type(arg) ~= "table" then
+			return
+		end
+
+		if type(arg.name) == "string" and arg.name ~= "" then
+			if not tbl2.bl.known[arg.name] then
+				tbl2.bl.known[arg.name] = true
+
+				if tbl2.bl.refresh and tbl2.bl.modal and tbl2.bl.modal.Visible then
+					task.defer(tbl2.bl.refresh)
+				end
+			end
+		end
+
+		if arg.name and tbl.blacklist[fn3(arg.name)] then
+			return
+		end
+
+		if fn6 then
+			local v3 = fn6
+			local name = arg.name
+			local valStr = arg.valStr
+
+			if not valStr then
+				valStr = tostring(arg.mps or 0)
+			end
+
+			v3(name, valStr, arg.players or "?", arg.jobId or "")
+		end
+
+		local isBasic = fn13(arg.mps, arg.og)
+		isBasic = tbl4[n2] and tbl4[n2].isBasic and isBasic or tbl3.accentHover
+		local v3 = fn16(arg)
+
+		if v3 and not arg.silent and tbl.logSoundEnabled then
+			fn10(tbl.logSoundId or "125621644257669", 0.3, 1)
+		end
+
+		local flag4 = not arg.og
+
+		if flag4 then
+			flag4 = (tonumber(arg.mps) or 0) < 10000000
+		end
+
+		local Frame13 = fn11("Frame", {
+			Name = "EntryWrapper",
+			Size = UDim2.new(1, 0, 0, 0),
+			BackgroundTransparency = 1,
+			Visible = v3,
+			Parent = ScrollingFrame,
+		})
+
+		tbl6[Frame13] = arg
+
+		local Frame14 = fn11("Frame", {
+			Size = UDim2.new(1, -4, 1, 0),
+			Position = UDim2.new(0, 50, 0, 0),
+			BackgroundColor3 = Color3.fromRGB(20, 22, 30),
+			BackgroundTransparency = 0.2,
+			ZIndex = 4,
+			Parent = Frame13,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(0, 14), Parent = Frame14 })
+		fn11("UIStroke", { Color = Color3.fromRGB(40, 45, 60), Thickness = 1, Parent = Frame14 })
+		fn11("UIScale", { Scale = 1, Parent = Frame14 })
+
+		fn11("ImageLabel", {
+			Name = flag4 and "GlowBase" or "Glow",
+			Size = UDim2.new(1, 20, 1, 20),
+			Position = UDim2.new(0, -10, 0, -10),
+			BackgroundTransparency = 1,
+			Image = "rbxassetid://1316045217",
+			ImageColor3 = isBasic,
+			ImageTransparency = 1,
+			ScaleType = Enum.ScaleType.Slice,
+			SliceCenter = Rect.new(10, 10, 118, 118),
+			ZIndex = 3,
+			Parent = Frame14,
+		})
+
+		local Frame15 = fn11("Frame", {
+			Name = flag4 and "SideLineBase" or "SideLine",
+			Size = UDim2.new(0, 6, 1, -16),
+			Position = UDim2.new(0, 6, 0, 8),
+			BackgroundColor3 = isBasic,
+			BorderSizePixel = 0,
+			ZIndex = 5,
+			Parent = Frame14,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame15 })
+
+		fn11("TextLabel", {
+			Name = flag4 and "NameLabelBase" or "NameLabel",
+			Size = UDim2.new(1, -150, 0, 18),
+			Position = UDim2.new(0, 24, 0, 6),
+			BackgroundTransparency = 1,
+			Text = tostring(arg.name or "Unknown"),
+			TextColor3 = isBasic,
+			TextScaled = true,
+			Font = tbl3.fontBold,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			ZIndex = 5,
+			Parent = Frame14,
+		})
+
+		local v4 = fn15(arg.mps)
+
+		if arg.players and tostring(arg.players) ~= "?" then
+			v4 ..= " • Players: " .. tostring(arg.players)
+		end
+
+		if arg.og then
+			v4 ..= " • OG"
+		end
+
+		fn11("TextLabel", {
+			Size = UDim2.new(1, -150, 0, 14),
+			Position = UDim2.new(0, 24, 0, 26),
+			BackgroundTransparency = 1,
+			Text = v4,
+			TextColor3 = tbl3.textDark,
+			TextScaled = true,
+			Font = tbl3.fontBold,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 5,
+			Parent = Frame14,
+		})
+
+		local Frame16 = fn11("Frame", {
+			Size = UDim2.new(0, 100, 1, 0),
+			Position = UDim2.new(1, -110, 0, 0),
+			BackgroundTransparency = 1,
+			ZIndex = 6,
+			Parent = Frame14,
+		})
+
+		local TextButton5 = fn11("TextButton", {
+			Name = "JoinBtn",
+			Size = UDim2.new(0, 44, 0, 24),
+			Position = UDim2.new(0, 0, 0.5, -12),
+			BackgroundColor3 = tbl3.accent,
+			Text = "JOIN",
+			TextColor3 = Color3.fromRGB(0, 0, 0),
+			TextSize = 10,
+			Font = tbl3.fontBold,
+			AutoButtonColor = true,
+			ZIndex = 7,
+			Parent = Frame16,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(0, 6), Parent = TextButton5 })
+
+		local TextButton6 = fn11("TextButton", {
+			Size = UDim2.new(0, 44, 0, 24),
+			Position = UDim2.new(0, 50, 0.5, -12),
+			BackgroundColor3 = tbl3.orange,
+			Text = "FORCE",
+			TextColor3 = Color3.fromRGB(0, 0, 0),
+			TextSize = 10,
+			Font = tbl3.fontBold,
+			AutoButtonColor = true,
+			ZIndex = 7,
+			Parent = Frame16,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(0, 6), Parent = TextButton6 })
+
+		TextButton5.MouseButton1Click:Connect(function()
+			fn18(arg.jobId)
+		end)
+
+		TextButton6.MouseButton1Click:Connect(function()
+			fn19(arg.jobId, tbl.forceTime)
+		end)
+
+		fn12(Frame13, { Size = UDim2.new(1, 0, 0, 48) }, 0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+		fn12(Frame14, { Position = UDim2.new(0, 0, 0, 0) }, 0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+		table.insert(tbl2.history, 1, { name = arg.name, mps = arg.mps, time = fn17() })
+
+		if #tbl2.history > 100 then
+			table.remove(tbl2.history)
+		end
+
+		if v3 then
+			tbl2.detected = tbl2.detected + 1
+			TextLabel2.Text = tostring(tbl2.detected) .. " detected"
+		end
+
+		local tbl10 = {}
+
+		for _, child in ipairs(ScrollingFrame:GetChildren()) do
+			if child.Name == "EntryWrapper" then
+				table.insert(tbl10, child)
+			end
+		end
+
+		if #tbl10 > 200 then
+			for i = 1, #tbl10 - 200 do
+				tbl6[tbl10[i]] = nil
+				tbl10[i]:Destroy()
+			end
+		end
+
+		fn23(ScrollingFrame, UIListLayout)
+
+		if v3 then
+			if tbl.autoJoin or tbl.autoForce then
+				if fn5 then
+					pcall(fn5, arg.name, arg.mps)
+				end
+			end
+
+			if tbl.autoJoin then
+				fn18(arg.jobId)
+			elseif tbl.autoForce then
+				fn19(arg.jobId, tbl.forceTime)
+			end
+		end
+	end
+
+	local CanvasGroup2 = fn11("CanvasGroup", {
+		Size = UDim2.new(1, -32, 1, -32),
+		Position = UDim2.new(0, 16, 0, 16),
+		BackgroundTransparency = 1,
+		Visible = false,
+		ZIndex = 2,
+		Parent = Frame3,
+	})
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 3),
+		PaddingBottom = UDim.new(0, 3),
+		PaddingLeft = UDim.new(0, 3),
+		PaddingRight = UDim.new(0, 3),
+		Parent = CanvasGroup2,
+	})
+
+	tbl8.History = CanvasGroup2
+
+	fn11("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+		Text = "Detection History",
+		TextColor3 = tbl3.text,
+		TextSize = 18,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 3,
+		Parent = CanvasGroup2,
+	})
+
+	local ScrollingFrame3 = fn11("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, -40),
+		Position = UDim2.new(0, 0, 0, 40),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ScrollBarThickness = 2,
+		ScrollBarImageColor3 = tbl3.accent,
+		ZIndex = 3,
+		Parent = CanvasGroup2,
+	})
+
+	local UIListLayout3 = fn11("UIListLayout", { Padding = UDim.new(0, 6), Parent = ScrollingFrame3 })
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		Parent = ScrollingFrame3,
+	})
+
+	local CanvasGroup3 = fn11("CanvasGroup", {
+		Size = UDim2.new(1, -32, 1, -32),
+		Position = UDim2.new(0, 16, 0, 16),
+		BackgroundTransparency = 1,
+		Visible = false,
+		ZIndex = 2,
+		Parent = Frame3,
+	})
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 3),
+		PaddingBottom = UDim.new(0, 3),
+		PaddingLeft = UDim.new(0, 3),
+		PaddingRight = UDim.new(0, 3),
+		Parent = CanvasGroup3,
+	})
+
+	tbl8.Users = CanvasGroup3
+
+	fn11("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+		Text = "Global Users",
+		TextColor3 = tbl3.text,
+		TextSize = 18,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 3,
+		Parent = CanvasGroup3,
+	})
+
+	local ScrollingFrame4 = fn11("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, -40),
+		Position = UDim2.new(0, 0, 0, 40),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ScrollBarThickness = 2,
+		ScrollBarImageColor3 = tbl3.accent,
+		ZIndex = 3,
+		Parent = CanvasGroup3,
+	})
+
+	local UIListLayout4 = fn11("UIListLayout", { Padding = UDim.new(0, 8), Parent = ScrollingFrame4 })
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		Parent = ScrollingFrame4,
+	})
+
+	local function fn28()
+		for _, child in ipairs(ScrollingFrame3:GetChildren()) do
+			if child:IsA("Frame") then
+				child:Destroy()
+			end
+		end
+
+		for _, v3 in ipairs(tbl2.history) do
+			local Frame13 = fn11("Frame", {
+				Size = UDim2.new(1, 0, 0, 46),
+				BackgroundColor3 = Color3.fromRGB(18, 20, 28),
+				BackgroundTransparency = 0.3,
+				ZIndex = 4,
+				Parent = ScrollingFrame3,
+			})
+
+			fn11("UICorner", { CornerRadius = UDim.new(0, 12), Parent = Frame13 })
+			local UIStroke4 = fn11("UIStroke", { Color = Color3.fromRGB(35, 40, 55), Transparency = 0.4, Thickness = 1, Parent = Frame13 })
+
+			fn11("TextLabel", {
+				Size = UDim2.new(0, 60, 1, 0),
+				Position = UDim2.new(0, 14, 0, 0),
+				BackgroundTransparency = 1,
+				Text = v3.time,
+				TextColor3 = tbl3.muted,
+				TextSize = 11,
+				Font = tbl3.font,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 5,
+				Parent = Frame13,
+			})
+
+			fn11("TextLabel", {
+				Size = UDim2.new(1, -180, 1, 0),
+				Position = UDim2.new(0, 78, 0, 0),
+				BackgroundTransparency = 1,
+				Text = v3.name,
+				TextColor3 = tbl3.text,
+				TextSize = 13,
+				Font = tbl3.fontBold,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				ZIndex = 5,
+				Parent = Frame13,
+			})
+
+			fn11("TextLabel", {
+				Name = "MPSLabel",
+				Size = UDim2.new(0, 80, 1, 0),
+				Position = UDim2.new(1, -88, 0, 0),
+				BackgroundTransparency = 1,
+				Text = fn15(v3.mps),
+				TextColor3 = tbl3.accent,
+				TextSize = 12,
+				Font = tbl3.fontBold,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				ZIndex = 5,
+				Parent = Frame13,
+			})
+
+			Frame13.MouseEnter:Connect(function()
+				fn12(Frame13, { BackgroundTransparency = 0 })
+				fn12(UIStroke4, { Color = tbl3.accent, Transparency = 0 })
+			end)
+
+			Frame13.MouseLeave:Connect(function()
+				fn12(Frame13, { BackgroundTransparency = 0.3 })
+				fn12(UIStroke4, { Color = Color3.fromRGB(35, 40, 55), Transparency = 0.4 })
+			end)
+		end
+
+		fn23(ScrollingFrame3, UIListLayout3)
+	end
+
+	fn25 = function()
+		for _, child in ipairs(ScrollingFrame4:GetChildren()) do
+			if child:IsA("Frame") then
+				child:Destroy()
+			end
+		end
+
+		for k in pairs(tbl5) do
+			local Frame13 = fn11("Frame", {
+				Size = UDim2.new(1, 0, 0, 58),
+				BackgroundColor3 = Color3.fromRGB(18, 20, 28),
+				BackgroundTransparency = 0.3,
+				ZIndex = 4,
+				Parent = ScrollingFrame4,
+			})
+
+			fn11("UICorner", { CornerRadius = UDim.new(0, 12), Parent = Frame13 })
+			local UIStroke4 = fn11("UIStroke", { Color = Color3.fromRGB(35, 40, 55), Transparency = 0.4, Thickness = 1, Parent = Frame13 })
+
+			local ImageLabel3 = fn11("ImageLabel", {
+				Size = UDim2.new(0, 40, 0, 40),
+				Position = UDim2.new(0, 10, 0, 9),
+				BackgroundColor3 = Color3.fromRGB(30, 33, 45),
+				BackgroundTransparency = 0,
+				ZIndex = 5,
+				Parent = Frame13,
+			})
+
+			fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = ImageLabel3 })
+
+			task.spawn(function()
+				local ok, result = pcall(function()
+					return Players:GetUserIdFromNameAsync(k)
+				end)
+
+				ImageLabel3.Image = ok and result and "rbxthumb://type=AvatarHeadShot&id=" .. result .. "&w=150&h=150" or "rbxassetid://10137537367"
+			end)
+
+			fn11("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 18),
+				Position = UDim2.new(0, 60, 0, 11),
+				BackgroundTransparency = 1,
+				Text = k,
+				TextColor3 = tbl3.text,
+				TextSize = 13,
+				Font = tbl3.fontBold,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				ZIndex = 5,
+				Parent = Frame13,
+			})
+
+			local v3 = fn9(k)
+			local orange = fn7(k) and tbl3.orange or tbl3.accent
+
+			fn11("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 14),
+				Position = UDim2.new(0, 60, 0, 31),
+				BackgroundTransparency = 1,
+				Text = v3,
+				TextColor3 = orange,
+				TextSize = 11,
+				Font = tbl3.font,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 5,
+				Parent = Frame13,
+			})
+
+			Frame13.MouseEnter:Connect(function()
+				fn12(Frame13, { BackgroundTransparency = 0 })
+				fn12(UIStroke4, { Color = tbl3.accent, Transparency = 0 })
+			end)
+
+			Frame13.MouseLeave:Connect(function()
+				fn12(Frame13, { BackgroundTransparency = 0.3 })
+				fn12(UIStroke4, { Color = Color3.fromRGB(35, 40, 55), Transparency = 0.4 })
+			end)
+		end
+
+		fn23(ScrollingFrame4, UIListLayout4)
+	end
+
+	local v3 = fn21
+
+	fn21 = function()
+		v3()
+
+		if tbl2.tab == "History" then
+			fn28()
+		end
+
+		if tbl2.tab == "Users" then
+			fn25()
+		end
+	end
+
+	local CanvasGroup4 = fn11("CanvasGroup", {
+		Size = UDim2.new(1, -32, 1, -32),
+		Position = UDim2.new(0, 16, 0, 16),
+		BackgroundTransparency = 1,
+		Visible = false,
+		ZIndex = 2,
+		Parent = Frame3,
+	})
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 3),
+		PaddingBottom = UDim.new(0, 3),
+		PaddingLeft = UDim.new(0, 3),
+		PaddingRight = UDim.new(0, 3),
+		Parent = CanvasGroup4,
+	})
+
+	tbl8.Settings = CanvasGroup4
+
+	fn11("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+		Text = "Settings",
+		TextColor3 = tbl3.text,
+		TextSize = 18,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 3,
+		Parent = CanvasGroup4,
+	})
+
+	ScrollingFrame2 = fn11("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, -40),
+		Position = UDim2.new(0, 0, 0, 40),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 2,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ScrollingDirection = Enum.ScrollingDirection.Y,
+		ScrollBarImageColor3 = tbl3.accent,
+		ZIndex = 3,
+		Parent = CanvasGroup4,
+	})
+
+	UIListLayout2 = fn11("UIListLayout", { Padding = UDim.new(0, 8), Parent = ScrollingFrame2 })
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, touchEnabled and 90 or 24),
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		Parent = ScrollingFrame2,
+	})
+
+	fn26 = function(arg, arg2)
+		local Frame13 = fn11("Frame", {
+			Size = UDim2.new(1, 0, 0, 60),
+			BackgroundColor3 = Color3.fromRGB(20, 22, 30),
+			BackgroundTransparency = 0.3,
+			ZIndex = 4,
+			Parent = ScrollingFrame2,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = Frame13 })
+		local UIStroke4 = fn11("UIStroke", { Color = Color3.fromRGB(40, 45, 60), Transparency = 0.3, Thickness = 1, Parent = Frame13 })
+
+		fn11("TextLabel", {
+			Size = UDim2.new(1, -100, 0, 18),
+			Position = UDim2.new(0, 16, 0, 12),
+			BackgroundTransparency = 1,
+			Text = arg,
+			TextColor3 = tbl3.text,
+			TextSize = 14,
+			Font = tbl3.fontBold,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 5,
+			Parent = Frame13,
+		})
+
+		fn11("TextLabel", {
+			Size = UDim2.new(1, -100, 0, 14),
+			Position = UDim2.new(0, 16, 0, 32),
+			BackgroundTransparency = 1,
+			Text = arg2,
+			TextColor3 = tbl3.muted,
+			TextSize = 12,
+			Font = tbl3.font,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 5,
+			Parent = Frame13,
+		})
+
+		Frame13.MouseEnter:Connect(function()
+			fn12(Frame13, { BackgroundTransparency = 0 })
+			fn12(UIStroke4, { Color = tbl3.accent, Transparency = 0 })
+		end)
+
+		Frame13.MouseLeave:Connect(function()
+			fn12(Frame13, { BackgroundTransparency = 0.3 })
+			fn12(UIStroke4, { Color = Color3.fromRGB(40, 45, 60), Transparency = 0.3 })
+		end)
+
+		return Frame13
+	end
+
+	local forceTime = fn26("Force Time", "Duration for force-join retries")
+
+	local TextButton5 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -16, 0.5, 0),
+		Size = UDim2.new(0, 60, 0, 30),
+		BackgroundColor3 = Color3.fromRGB(30, 35, 50),
+		Text = tbl.forceTime .. "s",
+		TextColor3 = tbl3.text,
+		TextSize = 13,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 5,
+		Parent = forceTime,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = TextButton5 })
+
+	TextButton5.MouseEnter:Connect(function()
+		fn12(TextButton5, { BackgroundColor3 = Color3.fromRGB(45, 50, 70) })
+	end)
+
+	TextButton5.MouseLeave:Connect(function()
+		fn12(TextButton5, { BackgroundColor3 = Color3.fromRGB(30, 35, 50) })
+	end)
+
+	local tbl10 = { 5, 10, 15, 20, 30 }
+	local n4 = 2
+
+	for i, v4 in ipairs(tbl10) do
+		if v4 == tbl.forceTime then
+			n4 = i
+			break
+		end
+	end
+
+	TextButton5.MouseButton1Click:Connect(function()
+		n4 = n4 % #tbl10 + 1
+		tbl.forceTime = tbl10[n4]
+		TextButton5.Text = tbl.forceTime .. "s"
+		fn4()
+	end)
+
+	local Threshold = fn26("Threshold", "Minimum log value to display")
+
+	local TextButton6 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -16, 0, 15),
+		Size = UDim2.new(0, 80, 0, 30),
+		BackgroundColor3 = Color3.fromRGB(30, 35, 50),
+		Text = tbl.threshold,
+		TextColor3 = tbl3.text,
+		TextSize = 13,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 5,
+		Parent = Threshold,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = TextButton6 })
+
+	TextButton6.MouseEnter:Connect(function()
+		fn12(TextButton6, { BackgroundColor3 = Color3.fromRGB(45, 50, 70) })
+	end)
+
+	TextButton6.MouseLeave:Connect(function()
+		fn12(TextButton6, { BackgroundColor3 = Color3.fromRGB(30, 35, 50) })
+	end)
+
+	local Frame13 = fn11("Frame", {
+		Size = UDim2.new(0, 80, 0, 0),
+		Position = UDim2.new(1, -16, 0, 50),
+		AnchorPoint = Vector2.new(1, 0),
+		BackgroundColor3 = Color3.fromRGB(20, 25, 35),
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		ZIndex = 50,
+		Parent = Threshold,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = Frame13 })
+	fn11("UIStroke", { Color = Color3.fromRGB(40, 45, 60), Thickness = 1, Parent = Frame13 })
+	fn11("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Parent = Frame13 })
+	local flag4 = false
+	local tbl11 = { "0M+", "10M+", "20M+", "50M+", "100M+", "300M+", "500M+", "1B+" }
+
+	for _, v4 in ipairs(tbl11) do
+		local TextButton7 = fn11("TextButton", {
+			Size = UDim2.new(1, 0, 0, 30),
+			BackgroundTransparency = 1,
+			Text = v4,
+			TextColor3 = tbl3.textDark,
+			TextSize = 12,
+			Font = tbl3.fontBold,
+			ZIndex = 51,
+			Parent = Frame13,
+		})
+
+		TextButton7.MouseEnter:Connect(function()
+			fn12(TextButton7, { TextColor3 = tbl3.text })
+		end)
+
+		TextButton7.MouseLeave:Connect(function()
+			fn12(TextButton7, { TextColor3 = tbl3.textDark })
+		end)
+
+		TextButton7.MouseButton1Click:Connect(function()
+			tbl.threshold = v4
+			TextButton6.Text = v4
+			fn4()
+			flag4 = false
+			fn12(Threshold, { Size = UDim2.new(1, 0, 0, 60) }, 0.2)
+			fn12(Frame13, { Size = UDim2.new(0, 80, 0, 0) }, 0.2)
+
+			task.delay(0.25, function()
+				fn23(ScrollingFrame2, UIListLayout2)
+			end)
+
+			if tbl2.bl.applyFilter then
+				tbl2.bl.applyFilter()
+			elseif ScrollingFrame then
+				local detected = 0
+
+				for _, child in ipairs(ScrollingFrame:GetChildren()) do
+					if child.Name == "EntryWrapper" and tbl6[child] then
+						local v5 = fn16(tbl6[child])
+						child.Visible = v5
+
+						if v5 then
+							detected += 1
+						end
+					end
+				end
+
+				tbl2.detected = detected
+
+				if TextLabel2 then
+					TextLabel2.Text = tostring(tbl2.detected) .. " detected"
+				end
+
+				fn23(ScrollingFrame, UIListLayout)
+			end
+		end)
+	end
+
+	TextButton6.MouseButton1Click:Connect(function()
+		flag4 = not flag4
+
+		if flag4 then
+			fn12(Threshold, { Size = UDim2.new(1, 0, 0, 60 + #tbl11 * 30) }, 0.2)
+			fn12(Frame13, { Size = UDim2.new(0, 80, 0, #tbl11 * 30) }, 0.2)
+
+			task.delay(0.25, function()
+				fn23(ScrollingFrame2, UIListLayout2)
+			end)
+		else
+			fn12(Threshold, { Size = UDim2.new(1, 0, 0, 60) }, 0.2)
+			fn12(Frame13, { Size = UDim2.new(0, 80, 0, 0) }, 0.2)
+
+			task.delay(0.25, function()
+				fn23(ScrollingFrame2, UIListLayout2)
+			end)
+		end
+	end)
+
+	local Keybind = fn26("Keybind", "Toggle menu visibility")
+
+	local TextButton7 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -16, 0.5, 0),
+		Size = UDim2.new(0, 80, 0, 30),
+		BackgroundColor3 = Color3.fromRGB(30, 35, 50),
+		Text = tbl.keybind.Name,
+		TextColor3 = tbl3.text,
+		TextSize = 13,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 5,
+		Parent = Keybind,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = TextButton7 })
+
+	TextButton7.MouseEnter:Connect(function()
+		fn12(TextButton7, { BackgroundColor3 = Color3.fromRGB(45, 50, 70) })
+	end)
+
+	TextButton7.MouseLeave:Connect(function()
+		fn12(TextButton7, { BackgroundColor3 = Color3.fromRGB(30, 35, 50) })
+	end)
+
+	local flag5 = false
+
+	TextButton7.MouseButton1Click:Connect(function()
+		flag5 = true
+		TextButton7.Text = "..."
+	end)
+
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if flag5 and input.UserInputType == Enum.UserInputType.Keyboard then
+			flag5 = false
+			tbl.keybind = input.KeyCode
+			TextButton7.Text = tbl.keybind.Name
+			fn4()
+			return
+		end
+
+		if not gameProcessed and input.KeyCode == tbl.keybind then
+			if Frame.Visible then
+				fn12(UIScale, { Scale = 0 }, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+
+				task.delay(0.4, function()
+					Frame.Visible = false
+					Frame5.Visible = true
+					Frame5.Size = UDim2.new(0, 0, 0, 0)
+					fn12(Frame5, { Size = UDim2.new(0, 50, 0, 50) }, 0.4, Enum.EasingStyle.Back)
+				end)
+			else
+				fn12(Frame5, { Size = UDim2.new(0, 0, 0, 0) }, 0.2)
+
+				task.delay(0.2, function()
+					Frame5.Visible = false
+					Frame.Visible = true
+					fn12(UIScale, { Scale = n }, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+				end)
+			end
+		end
+	end)
+
+	local Unload = fn26("Unload", "Completely remove the script")
+
+	local TextButton8 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -16, 0.5, 0),
+		Size = UDim2.new(0, 80, 0, 30),
+		BackgroundColor3 = tbl3.redDark,
+		Text = "Unload",
+		TextColor3 = tbl3.red,
+		TextSize = 13,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 5,
+		Parent = Unload,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = TextButton8 })
+
+	TextButton8.MouseEnter:Connect(function()
+		fn12(TextButton8, { BackgroundColor3 = tbl3.red, TextColor3 = tbl3.text })
+	end)
+
+	TextButton8.MouseLeave:Connect(function()
+		fn12(TextButton8, { BackgroundColor3 = tbl3.redDark, TextColor3 = tbl3.red })
+	end)
+
+	TextButton8.MouseButton1Click:Connect(function()
+		ScreenGui:Destroy()
+	end)
+
+	local themeColor = fn26("Theme Color", "Choose your accent color")
+
+	local Frame14 = fn11("Frame", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -16, 0.5, 0),
+		Size = UDim2.new(0, 200, 0, 24),
+		BackgroundTransparency = 1,
+		ZIndex = 5,
+		Parent = themeColor,
+	})
+
+	fn11("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Right,
+		Padding = UDim.new(0, 6),
+		Parent = Frame14,
+	})
+
+	local thread = nil
+
+	local function fn29(accent)
+		tbl3.accent = accent
+		local v4, v5, v6 = accent:ToHSV()
+		tbl3.accentHover = Color3.fromHSV(v4, v5, math.min(1, v6 + 0.2))
+		tbl3.accentDark = Color3.fromHSV(v4, v5, math.max(0, v6 - 0.4))
+		tbl3.accentAlt = Color3.fromHSV((v4 + 0.15) % 1, v5, v6)
+
+		for _, descendant in ipairs(ScreenGui:GetDescendants()) do
+			if descendant.Name ~= "ThemeCircle" then
+				local attribute = descendant:GetAttribute("ThemeOs")
+
+				if attribute then
+					if attribute ~= -1 then
+						if descendant:IsA("GuiObject") then
+							descendant.BackgroundColor3 = Color3.fromHSV(v4, attribute, descendant:GetAttribute("ThemeOv"))
+						elseif descendant:IsA("UIStroke") then
+							descendant.Color = Color3.fromHSV(v4, attribute, descendant:GetAttribute("ThemeOv"))
+						end
+					end
+				elseif descendant:IsA("GuiObject") then
+					local attribute2 = descendant:GetAttribute("OrigBg") or descendant.BackgroundColor3
+					descendant:SetAttribute("OrigBg", attribute2)
+					local v7, v8, v9 = attribute2:ToHSV()
+
+					if v9 < 0.45 and v9 > 0.01 and v8 < 0.6 then
+						descendant:SetAttribute("ThemeOs", math.min(0.35, v8 + 0.1))
+						descendant:SetAttribute("ThemeOv", v9)
+						descendant.BackgroundColor3 = Color3.fromHSV(v4, math.min(0.35, v8 + 0.1), v9)
+					else
+						descendant:SetAttribute("ThemeOs", -1)
+					end
+				elseif descendant:IsA("UIStroke") then
+					local attribute2 = descendant:GetAttribute("OrigColor") or descendant.Color
+					descendant:SetAttribute("OrigColor", attribute2)
+					local v7, v8, v9 = attribute2:ToHSV()
+
+					if v9 < 0.45 and v9 > 0.01 and v8 < 0.6 then
+						descendant:SetAttribute("ThemeOs", math.min(0.35, v8 + 0.1))
+						descendant:SetAttribute("ThemeOv", v9)
+						descendant.Color = Color3.fromHSV(v4, math.min(0.35, v8 + 0.1), v9)
+					else
+						descendant:SetAttribute("ThemeOs", -1)
+					end
+				else
+					descendant:SetAttribute("ThemeOs", -1)
+				end
+			end
+		end
+
+		if UIStroke then
+			UIStroke.Color = tbl3.accent
+		end
+
+		if UIStroke2 then
+			UIStroke2.Color = tbl3.accent
+		end
+
+		if Frame4 then
+			Frame4.BackgroundColor3 = tbl3.accent
+		end
+
+		if TextLabel then
+			TextLabel.TextColor3 = tbl3.accent
+		end
+
+		if Frame2 then
+			Frame2.BackgroundColor3 = tbl3.accent
+		end
+
+		if TextLabel4 then
+			TextLabel4.TextColor3 = tbl3.accent
+		end
+
+		if UIStroke3 then
+			UIStroke3.Color = tbl3.accent
+		end
+
+		if TextButton then
+			TextButton.TextColor3 = tbl3.accent
+		end
+
+		if ScrollingFrame then
+			ScrollingFrame.ScrollBarImageColor3 = tbl3.accent
+		end
+
+		if ScrollingFrame3 then
+			ScrollingFrame3.ScrollBarImageColor3 = tbl3.accent
+		end
+
+		if ScrollingFrame4 then
+			ScrollingFrame4.ScrollBarImageColor3 = tbl3.accent
+		end
+
+		if ImageLabel then
+			ImageLabel.ImageColor3 = tbl3.accent
+		end
+
+		if ImageLabel2 then
+			ImageLabel2.ImageColor3 = tbl3.accentAlt
+		end
+
+		if ScrollingFrame then
+			for _, child in ipairs(ScrollingFrame:GetChildren()) do
+				if child.Name == "EntryWrapper" then
+					local v7 = tbl6[child]
+					local isBasic = tbl4[n2] and tbl4[n2].isBasic
+					local accent2 = isBasic and v7 and fn13(v7.mps, v7.og) or tbl3.accent
+					accent2 = isBasic and v7 and accent2 or tbl3.accentHover
+
+					for _, descendant in ipairs(child:GetDescendants()) do
+						if descendant.Name == "JoinBtn" then
+							descendant.BackgroundColor3 = tbl3.accent
+						elseif descendant.Name == "GlowBase" or descendant.Name == "Glow" then
+							descendant.ImageColor3 = accent2
+						elseif descendant.Name == "SideLineBase" or descendant.Name == "SideLine" then
+							descendant.BackgroundColor3 = accent2
+						elseif descendant.Name == "NameLabelBase" or descendant.Name == "NameLabel" then
+							descendant.TextColor3 = accent2
+						end
+					end
+				end
+			end
+		end
+
+		for _, descendant in ipairs(ScreenGui:GetDescendants()) do
+			if descendant.Name:match("^SwitchBg_") then
+				if tbl[descendant.Name:sub(10)] then
+					descendant.BackgroundColor3 = tbl3.accent
+				end
+			end
+		end
+
+		if ScrollingFrame3 then
+			for _, child in ipairs(ScrollingFrame3:GetChildren()) do
+				if child:IsA("Frame") then
+					local mpsLabel = child:FindFirstChild("MPSLabel")
+
+					if mpsLabel then
+						mpsLabel.TextColor3 = tbl3.accent
+					end
+				end
+			end
+		end
+	end
+
+	fn27 = function(arg)
+		local v4 = tbl4[arg]
+		if not v4 then
+			return
+		end
+
+		if thread then
+			if type(thread) == "thread" then
+				task.cancel(thread)
+			else
+				thread:Disconnect()
+			end
+
+			thread = nil
+		end
+
+		n2 = arg
+
+		if v4.isRainbow then
+			local n5 = 0
+
+			thread = task.spawn(function()
+				while true do
+					n5 = (n5 + task.wait(0.05) * 0.1) % 1
+					fn29(Color3.fromHSV(n5, 0.8, 1))
+				end
+			end)
+		elseif v4.isBasic then
+			fn29(tbl3.accent)
+		else
+			fn29(v4.color)
+		end
+	end
+
+	for i, v4 in ipairs(tbl4) do
+		local TextButton9 = fn11("TextButton", {
+			Name = "ThemeCircle",
+			Size = UDim2.new(0, 22, 0, 22),
+			BackgroundColor3 = v4.color,
+			Text = "",
+			ZIndex = 6,
+			Parent = Frame14,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = TextButton9 })
+
+		if v4.isRainbow then
+			local tbl12 = {}
+			local colorSequence = ColorSequence.new
+			local tbl13 = {}
+			local v5 = ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0))
+			local v6 = ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 255, 0))
+			local v7 = ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 0))
+			local new = ColorSequenceKeypoint.new
+			local color = Color3.fromRGB
+			tbl13[1] = v5
+			tbl13[2] = v6
+			tbl13[3] = v7
+
+			do
+				local values = table.pack(new(1, color(0, 0, 255)))
+				table.move(values, 1, values.n, 4, tbl13)
+			end
+
+			tbl12.Color = colorSequence(tbl13)
+			tbl12.Parent = TextButton9
+			fn11("UIGradient", tbl12)
+		end
+
+		local UIStroke4 = fn11("UIStroke", { Color = tbl3.text, Thickness = 2, Transparency = i == n2 and 0 or 1, Parent = TextButton9 })
+
+		TextButton9.MouseButton1Click:Connect(function()
+			for _, child in ipairs(Frame14:GetChildren()) do
+				if child:IsA("TextButton") then
+					local uiStroke = child:FindFirstChild("UIStroke")
+
+					if uiStroke then
+						uiStroke.Transparency = 1
+					end
+				end
+			end
+
+			UIStroke4.Transparency = 0
+			fn27(i)
+			fn4()
+		end)
+	end
+end
+
+do
+	local logSoundId = fn26("Log Sound ID", "Asset ID played when a new log appears")
+
+	local TextButton2 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -14, 0, 18),
+		Size = UDim2.new(0, 22, 0, 24),
+		BackgroundTransparency = 1,
+		Text = "v",
+		TextColor3 = tbl3.textDark,
+		TextSize = 12,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 6,
+		Parent = logSoundId,
+	})
+
+	local TextBox = fn11("TextBox", {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -42, 0, 15),
+		Size = UDim2.new(0, 118, 0, 30),
+		BackgroundColor3 = Color3.fromRGB(30, 35, 50),
+		Text = tbl.logSoundId or "125621644257669",
+		PlaceholderText = "Sound ID",
+		PlaceholderColor3 = tbl3.muted,
+		TextColor3 = tbl3.text,
+		TextSize = 11,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		ClearTextOnFocus = false,
+		ZIndex = 5,
+		Parent = logSoundId,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = TextBox })
+	fn11("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), Parent = TextBox })
+	local UIStroke4 = fn11("UIStroke", { Color = Color3.fromRGB(40, 45, 60), Transparency = 0.3, Thickness = 1, Parent = TextBox })
+
+	TextBox.Focused:Connect(function()
+		if not tbl.logSoundEnabled then
+			TextBox:ReleaseFocus(false)
+			return
+		end
+		fn12(UIStroke4, { Color = tbl3.accent, Transparency = 0 })
+	end)
+
+	TextBox.FocusLost:Connect(function()
+		if not tbl.logSoundEnabled then
+			TextBox.Text = tbl.logSoundId or "125621644257669"
+			return
+		end
+		fn12(UIStroke4, { Color = Color3.fromRGB(40, 45, 60), Transparency = 0.3 })
+		local logSoundId2 = (TextBox.Text or ""):gsub("%D+", "")
+		if logSoundId2 == "" then
+			TextBox.Text = tbl.logSoundId or "125621644257669"
+			return
+		end
+		tbl.logSoundId = logSoundId2
+		TextBox.Text = logSoundId2
+		fn4()
+
+		if fn10 then
+			fn10(logSoundId2, 0.4, 1)
+		end
+	end)
+
+	logSoundId.ClipsDescendants = true
+
+	local Frame6 = fn11("Frame", {
+		Position = UDim2.new(0, 2, 0, 60),
+		Size = UDim2.new(1, -4, 0, 0),
+		BackgroundTransparency = 1,
+		ClipsDescendants = true,
+		ZIndex = 5,
+		Parent = logSoundId,
+	})
+
+	fn11("Frame", {
+		Position = UDim2.new(0, 14, 0, 2),
+		Size = UDim2.new(1, -28, 0, 1),
+		BackgroundColor3 = Color3.fromRGB(40, 45, 60),
+		BackgroundTransparency = 0.4,
+		BorderSizePixel = 0,
+		ZIndex = 5,
+		Parent = Frame6,
+	})
+
+	local function fn28()
+		local logSoundEnabled = tbl.logSoundEnabled
+		TextBox.TextEditable = logSoundEnabled
+		TextBox.TextColor3 = logSoundEnabled and tbl3.text or tbl3.muted
+		TextBox.BackgroundColor3 = logSoundEnabled and Color3.fromRGB(30, 35, 50) or Color3.fromRGB(22, 24, 32)
+		UIStroke4.Transparency = logSoundEnabled and 0.3 or 0.75
+	end
+
+	local enableLogSound = fn22(Frame6, 8, "Enable Log Sound", "logSoundEnabled", function()
+		fn28()
+	end)
+
+	enableLogSound.BackgroundTransparency = 1
+	local uiStroke = enableLogSound:FindFirstChildOfClass("UIStroke")
+
+	if uiStroke then
+		uiStroke.Enabled = false
+	end
+
+	fn28()
+	local flag = false
+
+	TextButton2.MouseButton1Click:Connect(function()
+		flag = not flag
+		TextButton2.Text = flag and "^" or "v"
+		fn12(logSoundId, { Size = UDim2.new(1, 0, 0, flag and 120 or 60) }, 0.2)
+		fn12(Frame6, { Size = UDim2.new(1, -4, 0, flag and 60 or 0) }, 0.2)
+
+		task.delay(0.25, function()
+			fn23(ScrollingFrame2, UIListLayout2)
+		end)
+	end)
+end
+
+do
+	local Frame6 = fn11("Frame", {
+		Name = "BlacklistModal",
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 500,
+		Parent = ScreenGui,
+	})
+
+	tbl2.bl.modal = Frame6
+
+	local TextButton2 = fn11("TextButton", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+		BackgroundTransparency = 0.4,
+		Text = "",
+		AutoButtonColor = false,
+		ZIndex = 500,
+		Parent = Frame6,
+	})
+
+	local n3 = math.min(touchEnabled and 380 or 500, math.max(280, math.floor(viewportSize.X * 0.9)))
+	local n4 = math.min(touchEnabled and 340 or 420, math.max(260, math.floor(viewportSize.Y * 0.85)))
+
+	local TextButton3 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(0, n3, 0, n4),
+		BackgroundColor3 = Color3.fromRGB(15, 17, 24),
+		BorderSizePixel = 0,
+		Text = "",
+		AutoButtonColor = false,
+		Active = true,
+		ZIndex = 501,
+		Parent = Frame6,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 16), Parent = TextButton3 })
+	fn11("UIStroke", { Color = tbl3.accent, Transparency = 0.25, Thickness = 1.5, Parent = TextButton3 })
+
+	fn11("TextLabel", {
+		Size = UDim2.new(1, -60, 0, 22),
+		Position = UDim2.new(0, 18, 0, 14),
+		BackgroundTransparency = 1,
+		Text = "Blacklist",
+		TextColor3 = tbl3.text,
+		TextSize = 16,
+		Font = tbl3.fontBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 502,
+		Parent = TextButton3,
+	})
+
+	fn11("TextLabel", {
+		Size = UDim2.new(1, -60, 0, 14),
+		Position = UDim2.new(0, 18, 0, 36),
+		BackgroundTransparency = 1,
+		Text = "Blacklist a brainrot to hide it from the live feed",
+		TextColor3 = tbl3.muted,
+		TextSize = 11,
+		Font = tbl3.font,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 502,
+		Parent = TextButton3,
+	})
+
+	local TextButton4 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -14, 0, 14),
+		Size = UDim2.new(0, 28, 0, 28),
+		BackgroundColor3 = tbl3.redDark,
+		BackgroundTransparency = 0.3,
+		Text = "X",
+		TextColor3 = tbl3.red,
+		TextSize = 14,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 502,
+		Parent = TextButton3,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = TextButton4 })
+
+	TextButton4.MouseEnter:Connect(function()
+		fn12(TextButton4, { BackgroundTransparency = 0, BackgroundColor3 = tbl3.red, TextColor3 = tbl3.text })
+	end)
+
+	TextButton4.MouseLeave:Connect(function()
+		fn12(TextButton4, { BackgroundTransparency = 0.3, BackgroundColor3 = tbl3.redDark, TextColor3 = tbl3.red })
+	end)
+
+	local TextBox = fn11("TextBox", {
+		Size = UDim2.new(1, -36, 0, 30),
+		Position = UDim2.new(0, 18, 0, 60),
+		BackgroundColor3 = Color3.fromRGB(22, 25, 35),
+		Text = "",
+		PlaceholderText = "Search brainrots...",
+		PlaceholderColor3 = tbl3.muted,
+		TextColor3 = tbl3.text,
+		TextSize = 12,
+		Font = tbl3.font,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ClearTextOnFocus = false,
+		ZIndex = 502,
+		Parent = TextButton3,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 8), Parent = TextBox })
+	fn11("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = TextBox })
+	fn11("UIStroke", { Color = tbl3.stroke, Transparency = 0.4, Thickness = 1, Parent = TextBox })
+
+	local Frame7 = fn11("Frame", {
+		Size = UDim2.new(1, -36, 1, -148),
+		Position = UDim2.new(0, 18, 0, 100),
+		BackgroundColor3 = Color3.fromRGB(12, 13, 18),
+		BackgroundTransparency = 0.3,
+		BorderSizePixel = 0,
+		ZIndex = 502,
+		Parent = TextButton3,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = Frame7 })
+	fn11("UIStroke", { Color = tbl3.stroke, Transparency = 0.5, Thickness = 1, Parent = Frame7 })
+
+	local ScrollingFrame3 = fn11("ScrollingFrame", {
+		Size = UDim2.new(1, -8, 1, -8),
+		Position = UDim2.new(0, 4, 0, 4),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = tbl3.accent,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		ScrollingDirection = Enum.ScrollingDirection.Y,
+		ZIndex = 503,
+		Parent = Frame7,
+	})
+
+	fn11("UIListLayout", { Padding = UDim.new(0, 4), Parent = ScrollingFrame3 })
+
+	fn11("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		Parent = ScrollingFrame3,
+	})
+
+	local Frame8 = fn11("Frame", {
+		Size = UDim2.new(1, -36, 0, 34),
+		Position = UDim2.new(0, 18, 1, -44),
+		BackgroundTransparency = 1,
+		ZIndex = 502,
+		Parent = TextButton3,
+	})
+
+	local TextButton5 = fn11("TextButton", {
+		Size = UDim2.new(0, 100, 0, 30),
+		Position = UDim2.new(0, 0, 0, 0),
+		BackgroundColor3 = tbl3.redDark,
+		BackgroundTransparency = 0.4,
+		Text = "Clear All",
+		TextColor3 = tbl3.red,
+		TextSize = 12,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 503,
+		Parent = Frame8,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 8), Parent = TextButton5 })
+
+	TextButton5.MouseEnter:Connect(function()
+		fn12(TextButton5, { BackgroundTransparency = 0, TextColor3 = tbl3.text })
+	end)
+
+	TextButton5.MouseLeave:Connect(function()
+		fn12(TextButton5, { BackgroundTransparency = 0.4, TextColor3 = tbl3.red })
+	end)
+
+	local TextLabel3 = fn11("TextLabel", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, 0, 0.5, 0),
+		Size = UDim2.new(0, 200, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "0 blacklisted",
+		TextColor3 = tbl3.muted,
+		TextSize = 11,
+		Font = tbl3.font,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		ZIndex = 503,
+		Parent = Frame8,
+	})
+
+	local function applyFilter()
+		if not ScrollingFrame then
+			return
+		end
+		local detected = 0
+
+		for _, child in ipairs(ScrollingFrame:GetChildren()) do
+			if child.Name == "EntryWrapper" and tbl6[child] then
+				local v = tbl6[child]
+				local visible = fn16(v) and not tbl.blacklist[fn3(v.name)]
+				child.Visible = visible
+
+				if visible then
+					detected += 1
+				end
+			end
+		end
+
+		tbl2.detected = detected
+
+		if TextLabel2 then
+			TextLabel2.Text = tostring(tbl2.detected) .. " detected"
+		end
+
+		fn23(ScrollingFrame, UIListLayout)
+	end
+
+	tbl2.bl.applyFilter = applyFilter
+
+	local function fn28()
+		local n5 = 0
+
+		for _, v in pairs(tbl.blacklist) do
+			if v then
+				n5 += 1
+			end
+		end
+
+		TextLabel3.Text = n5 .. " blacklisted"
+	end
+
+	local str5 = ""
+
+	local function refresh()
+		if not Frame6 or not Frame6.Visible then
+			fn28()
+			return
+		end
+		local tbl7 = {}
+		local tbl8 = {}
+
+		local function fn29(arg)
+			if type(arg) == "string" and arg ~= "" then
+				local v = fn3(arg)
+
+				if not tbl7[v] then
+					tbl7[v] = true
+					table.insert(tbl8, arg)
+				end
+			end
+		end
+
+		for k in pairs(tbl2.bl.known) do
+			fn29(k)
+		end
+
+		for k, v in pairs(tbl.blacklist) do
+			v = type(v) == "string" and v
+			k = v or k
+			fn29(k)
+		end
+
+		table.sort(tbl8)
+
+		for _, child in ipairs(ScrollingFrame3:GetChildren()) do
+			if child:IsA("Frame") or child:IsA("TextLabel") then
+				child:Destroy()
+			end
+		end
+
+		if #tbl8 == 0 then
+			fn11("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 60),
+				BackgroundTransparency = 1,
+				Text = "No brainrots yet.\nWait for one to appear in the live feed.",
+				TextColor3 = tbl3.muted,
+				TextSize = 12,
+				Font = tbl3.font,
+				ZIndex = 504,
+				Parent = ScrollingFrame3,
+			})
+
+			fn28()
+			return
+		end
+
+		local v = string.lower(str5)
+
+		for _, v2 in ipairs(tbl8) do
+			if v == "" or string.find(string.lower(v2), v, 1, true) ~= nil then
+				local Frame9 = fn11("Frame", {
+					Size = UDim2.new(1, 0, 0, 34),
+					BackgroundColor3 = Color3.fromRGB(20, 22, 30),
+					BackgroundTransparency = 0.3,
+					BorderSizePixel = 0,
+					ZIndex = 504,
+					Parent = ScrollingFrame3,
+				})
+
+				fn11("UICorner", { CornerRadius = UDim.new(0, 8), Parent = Frame9 })
+				fn11("UIStroke", { Color = tbl3.stroke, Transparency = 0.5, Thickness = 1, Parent = Frame9 })
+
+				fn11("TextLabel", {
+					Size = UDim2.new(1, -108, 1, 0),
+					Position = UDim2.new(0, 12, 0, 0),
+					BackgroundTransparency = 1,
+					Text = v2,
+					TextColor3 = tbl3.text,
+					TextSize = 12,
+					Font = tbl3.fontBold,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					ZIndex = 505,
+					Parent = Frame9,
+				})
+
+				local v3 = fn3(v2)
+				local flag = tbl.blacklist[v3] ~= nil
+				local v4 = fn11
+
+				local TextButton6 = v4("TextButton", {
+					AnchorPoint = Vector2.new(1, 0.5),
+					Position = UDim2.new(1, -8, 0.5, 0),
+					Size = UDim2.new(0, 90, 0, 22),
+					BackgroundColor3 = flag and tbl3.red or Color3.fromRGB(35, 40, 50),
+					Text = flag and "BLACKLISTED" or "Blacklist",
+					TextColor3 = tbl3.text,
+					TextSize = 9,
+					Font = tbl3.fontBold,
+					AutoButtonColor = false,
+					ZIndex = 505,
+					Parent = Frame9,
+				})
+
+				fn11("UICorner", { CornerRadius = UDim.new(0, 6), Parent = TextButton6 })
+				TextButton6:SetAttribute("ThemeOs", -1)
+
+				local function fn30(arg)
+					TextButton6.BackgroundColor3 = arg and tbl3.red or Color3.fromRGB(35, 40, 50)
+					TextButton6.Text = arg and "BLACKLISTED" or "Blacklist"
+				end
+
+				TextButton6.MouseButton1Click:Connect(function()
+					if tbl.blacklist[v3] then
+						tbl.blacklist[v3] = nil
+						fn30(false)
+					else
+						tbl.blacklist[v3] = v2
+						fn30(true)
+					end
+
+					fn4()
+					fn28()
+
+					if applyFilter then
+						applyFilter()
+					end
+				end)
+			end
+		end
+
+		fn28()
+	end
+
+	tbl2.bl.refresh = refresh
+
+	TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+		str5 = TextBox.Text or ""
+		refresh()
+	end)
+
+	TextButton5.MouseButton1Click:Connect(function()
+		tbl.blacklist = {}
+		fn4()
+		refresh()
+
+		if applyFilter then
+			applyFilter()
+		end
+	end)
+
+	TextButton4.MouseButton1Click:Connect(function()
+		Frame6.Visible = false
+	end)
+
+	TextButton2.MouseButton1Click:Connect(function()
+		Frame6.Visible = false
+	end)
+
+	Frame:GetPropertyChangedSignal("Visible"):Connect(function()
+		if not Frame.Visible and Frame6 then
+			Frame6.Visible = false
+		end
+	end)
+
+	local Blacklist = fn26("Blacklist", "Hide specific brainrots from the live feed")
+
+	local TextButton6 = fn11("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -16, 0.5, 0),
+		Size = UDim2.new(0, 80, 0, 30),
+		BackgroundColor3 = Color3.fromRGB(30, 35, 50),
+		Text = "Manage",
+		TextColor3 = tbl3.text,
+		TextSize = 12,
+		Font = tbl3.fontBold,
+		AutoButtonColor = false,
+		ZIndex = 5,
+		Parent = Blacklist,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 10), Parent = TextButton6 })
+
+	TextButton6.MouseEnter:Connect(function()
+		fn12(TextButton6, { BackgroundColor3 = Color3.fromRGB(45, 50, 70) })
+	end)
+
+	TextButton6.MouseLeave:Connect(function()
+		fn12(TextButton6, { BackgroundColor3 = Color3.fromRGB(30, 35, 50) })
+	end)
+
+	TextButton6.MouseButton1Click:Connect(function()
+		Frame6.Visible = true
+		refresh()
+	end)
+end
+
+fn23(ScrollingFrame2, UIListLayout2)
+
+local Frame6 = fn11("Frame", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 20),
+	Size = UDim2.new(0, 320, 1, 0),
+	BackgroundTransparency = 1,
+	ZIndex = 200,
+	Parent = ScreenGui,
+})
+
+fn11("UIListLayout", {
+	VerticalAlignment = Enum.VerticalAlignment.Top,
+	HorizontalAlignment = Enum.HorizontalAlignment.Center,
+	Padding = UDim.new(0, 12),
+	Parent = Frame6,
+})
+
+do
+	local Frame7 = fn11("Frame", {
+		Name = "RightNotifContainer",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -20, 0, 120),
+		Size = UDim2.new(0, 280, 1, -140),
+		BackgroundTransparency = 1,
+		ZIndex = 220,
+		Parent = ScreenGui,
+	})
+
+	fn11("UIListLayout", {
+		VerticalAlignment = Enum.VerticalAlignment.Top,
+		HorizontalAlignment = Enum.HorizontalAlignment.Right,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 8),
+		Parent = Frame7,
+	})
+
+	local n3 = 0
+
+	fn5 = function(arg, arg2)
+		n3 += 1
+		local v = n3
+		local v2 = fn13(arg2, false)
+
+		local Frame8 = fn11("Frame", {
+			Name = "JoinNotifWrapper",
+			Size = UDim2.new(0, 280, 0, 70),
+			BackgroundTransparency = 1,
+			ClipsDescendants = false,
+			ZIndex = 220,
+			LayoutOrder = -v,
+			Parent = Frame7,
+		})
+
+		local Frame9 = fn11("Frame", {
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.new(1, 60, 0, 0),
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(15, 17, 24),
+			BackgroundTransparency = 0.05,
+			BorderSizePixel = 0,
+			ZIndex = 220,
+			Parent = Frame8,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(0, 12), Parent = Frame9 })
+		local UIStroke4 = fn11("UIStroke", { Color = v2, Transparency = 0.3, Thickness = 1.5, Parent = Frame9 })
+		local uiGradient = Instance.new("UIGradient")
+
+		uiGradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 30, 42)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 17, 24)),
+		})
+
+		uiGradient.Rotation = 110
+		uiGradient.Parent = Frame9
+
+		local Frame10 = fn11("Frame", {
+			Size = UDim2.new(0, 4, 1, -16),
+			Position = UDim2.new(0, 10, 0, 8),
+			BackgroundColor3 = v2,
+			BorderSizePixel = 0,
+			ZIndex = 221,
+			Parent = Frame9,
+		})
+
+		fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame10 })
+
+		fn11("TextLabel", {
+			Size = UDim2.new(1, -32, 0, 14),
+			Position = UDim2.new(0, 22, 0, 10),
+			BackgroundTransparency = 1,
+			Text = "JOINING",
+			TextColor3 = v2,
+			TextSize = 11,
+			Font = Enum.Font.GothamBold,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 221,
+			Parent = Frame9,
+		})
+
+		fn11("TextLabel", {
+			Size = UDim2.new(1, -32, 0, 18),
+			Position = UDim2.new(0, 22, 0, 26),
+			BackgroundTransparency = 1,
+			Text = tostring(arg or "Unknown"),
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextSize = 14,
+			Font = Enum.Font.GothamBold,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			ZIndex = 221,
+			Parent = Frame9,
+		})
+
+		local str5 = fn15 and fn15(arg2) or "$" .. tostring(arg2) .. "/s"
+
+		fn11("TextLabel", {
+			Size = UDim2.new(1, -32, 0, 14),
+			Position = UDim2.new(0, 22, 0, 47),
+			BackgroundTransparency = 1,
+			Text = str5,
+			TextColor3 = v2,
+			TextSize = 12,
+			Font = Enum.Font.GothamMedium,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 221,
+			Parent = Frame9,
+		})
+
+		fn12(Frame9, { Position = UDim2.new(1, 0, 0, 0) }, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+		task.delay(3.5, function()
+			fn12(Frame9, { Position = UDim2.new(1, 60, 0, 0), BackgroundTransparency = 1 }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			fn12(UIStroke4, { Transparency = 1 }, 0.35)
+			fn12(Frame8, { Size = UDim2.new(0, 280, 0, 0) }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+
+			task.delay(0.4, function()
+				if Frame8 and Frame8.Parent then
+					Frame8:Destroy()
+				end
+			end)
+		end)
+	end
+end
+
+do
+	local n3 = touchEnabled and 90 or 78
+	local n4 = math.min(touchEnabled and 260 or 320, math.floor(viewportSize.Y * 0.55))
+
+	local function fn28()
+		return math.min(780, viewportSize.X * 0.9)
+	end
+
+	local Frame7 = fn11("Frame", {
+		Name = "AnnouncementTopFrame",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, -120),
+		Size = UDim2.new(0.9, 0, 0, n3),
+		BackgroundColor3 = Color3.fromRGB(15, 17, 24),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 998,
+		Visible = false,
+		Parent = ScreenGui,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(0, 16), Parent = Frame7 })
+	fn11("UISizeConstraint", { MaxSize = Vector2.new(780, n4), Parent = Frame7 })
+
+	local UIStroke4 = fn11("UIStroke", {
+		Color = tbl3.accent,
+		Transparency = 1,
+		Thickness = 1.5,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Parent = Frame7,
+	})
+
+	local uiGradient = Instance.new("UIGradient")
+	local colorSequence = ColorSequence.new
+	local tbl7 = {}
+	local v = ColorSequenceKeypoint.new(0, Color3.fromRGB(34, 38, 54))
+	local v2 = ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 22, 32))
+	tbl7[1] = v
+	tbl7[2] = v2
+
+	do
+		local values = table.pack(ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 14, 20)))
+		table.move(values, 1, values.n, 3, tbl7)
+	end
+
+	uiGradient.Color = colorSequence(tbl7)
+	uiGradient.Rotation = 90
+	uiGradient.Parent = Frame7
+
+	local ImageLabel3 = fn11("ImageLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(1, 80, 1, 80),
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://5028857084",
+		ImageColor3 = tbl3.accent,
+		ImageTransparency = 1,
+		ZIndex = 997,
+		Parent = Frame7,
+	})
+
+	local Frame8 = fn11("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 8),
+		Size = UDim2.new(0, 50, 0, 2),
+		BackgroundColor3 = tbl3.accent,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 999,
+		Parent = Frame7,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame8 })
+
+	local Frame9 = fn11("Frame", {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -8),
+		Size = UDim2.new(0, 50, 0, 2),
+		BackgroundColor3 = tbl3.accent,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 999,
+		Parent = Frame7,
+	})
+
+	fn11("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Frame9 })
+
+	local ScrollingFrame3 = fn11("ScrollingFrame", {
+		Name = "AnnouncementScrollArea",
+		Size = UDim2.new(1, -32, 1, -28),
+		Position = UDim2.new(0, 16, 0, 14),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = tbl3.accent,
+		ScrollBarImageTransparency = 0.3,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		ScrollingDirection = Enum.ScrollingDirection.Y,
+		ZIndex = 999,
+		Parent = Frame7,
+	})
+
+	local TextLabel3 = fn11("TextLabel", {
+		Name = "AnnouncementTextTop",
+		Size = UDim2.new(1, -6, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Position = UDim2.new(0, 0, 0, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = touchEnabled and 30 or 26,
+		Font = tbl3.fontBold,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextTransparency = 1,
+		TextStrokeTransparency = 1,
+		TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		ZIndex = 999,
+		Parent = ScrollingFrame3,
+	})
+
+	local function fn29(arg)
+		local n5 = fn28() - 38
+
+		local ok, result = pcall(function()
+			return TextService:GetTextSize(arg, TextLabel3.TextSize, TextLabel3.Font, Vector2.new(math.max(n5, 50), math.huge))
+		end)
+
+		if ok and result then
+			return result.Y
+		end
+		return n3 - 28
+	end
+
+	local function fn30(arg)
+		local text = tostring(arg or ""):gsub("\r", "")
+		if text == "" then
+			return
+		end
+		TextLabel3.Text = text
+		ScrollingFrame3.CanvasPosition = Vector2.new(0, 0)
+		local n5 = math.clamp(fn29(text) + 28, n3, n4)
+		local n6 = 0
+
+		for match in text:gmatch("%S+") do
+			n6 += 1
+		end
+
+		local n7 = math.clamp(8 + math.floor(n6 / 8), 8, 18)
+		Frame7.Visible = true
+		Frame7.Size = UDim2.new(0.9, 0, 0, n5)
+		Frame7.Position = UDim2.new(0.5, 0, 0, -(n5 + 40))
+		Frame7.BackgroundTransparency = 1
+		UIStroke4.Transparency = 1
+		ImageLabel3.ImageTransparency = 1
+		Frame8.BackgroundTransparency = 1
+		Frame9.BackgroundTransparency = 1
+		Frame8.Size = UDim2.new(0, 50, 0, 2)
+		Frame9.Size = UDim2.new(0, 50, 0, 2)
+		TextLabel3.TextTransparency = 1
+		TextLabel3.TextStrokeTransparency = 1
+		fn12(Frame7, { Position = UDim2.new(0.5, 0, 0, touchEnabled and 20 or 16), BackgroundTransparency = 0.05 }, 0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		fn12(UIStroke4, { Transparency = 0.2 }, 0.4)
+		fn12(ImageLabel3, { ImageTransparency = 0.6 }, 0.5)
+		fn12(Frame8, { BackgroundTransparency = 0.1, Size = UDim2.new(0, 110, 0, 2) }, 0.55, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+		fn12(Frame9, { BackgroundTransparency = 0.1, Size = UDim2.new(0, 110, 0, 2) }, 0.55, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+		fn12(TextLabel3, { TextTransparency = 0, TextStrokeTransparency = 0.7 }, 0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+		task.delay(n7, function()
+			if TextLabel3.Text == text then
+				fn12(Frame7, { Position = UDim2.new(0.5, 0, 0, -(n5 + 40)), BackgroundTransparency = 1 }, 0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+				fn12(UIStroke4, { Transparency = 1 }, 0.35)
+				fn12(ImageLabel3, { ImageTransparency = 1 }, 0.35)
+				fn12(Frame8, { BackgroundTransparency = 1, Size = UDim2.new(0, 50, 0, 2) }, 0.35)
+				fn12(Frame9, { BackgroundTransparency = 1, Size = UDim2.new(0, 50, 0, 2) }, 0.35)
+				fn12(TextLabel3, { TextTransparency = 1, TextStrokeTransparency = 1 }, 0.35)
+
+				task.delay(0.5, function()
+					if TextLabel3.Text == text then
+						Frame7.Visible = false
+					end
+				end)
+			end
+		end)
+	end
+
+	fn6 = function(arg, arg2, arg3, arg4)
+		if fn14(arg2) < 20000000 then
+			return
+		end
+		local str5 = string.format("%s | %s | %s | %s", tostring(arg), tostring(arg2), tostring(arg3), tostring(arg4 or ""))
+		local v3 = fn2()
+
+		if v3 then
+			pcall(function()
+				v3({
+					Url = str4,
+					Method = "POST",
+					Body = str5,
+					Headers = {
+						["Content-Type"] = "text/plain",
+						["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+						["Cache-Control"] = "no-cache",
+						Pragma = "no-cache",
+					},
+				})
+			end)
+		else
+			pcall(function()
+				HttpService:PostAsync("https://dexapi2.up.railway.app/logs", str5, Enum.HttpContentType.TextPlain)
+			end)
+		end
+	end
+
+	task.spawn(function()
+		while true do
+			local str5 = str2 .. "?t=" .. tostring(os.clock())
+			local v3 = fn2()
+			local body = nil
+
+			if v3 then
+				local ok, result = pcall(function()
+					return v3({
+						Url = str5,
+						Method = "GET",
+						Headers = {
+							["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+							Accept = "*/*",
+							["Cache-Control"] = "no-cache",
+							Pragma = "no-cache",
+						},
+					})
+				end)
+
+				local body2 = ok and result and result.Body
+				body = nil
+
+				if body2 then
+					body = result.Body
+				end
+			end
+
+			local result
+
+			if not body then
+				local ok
+
+				ok, result = pcall(function()
+					return HttpService:GetAsync(str5)
+				end)
+
+				if not ok then
+					result = body
+				end
+			else
+				result = body
+			end
+
+			if not result then
+				task.wait(2)
+				continue
+			end
+
+			for match in string.gmatch(result, "[^\r\n]+") do
+				if match == localPlayer.Name then
+					localPlayer:Kick("BLACKLISTED FROM SCRIPT BY OWNER")
+					return
+				end
+			end
+
+			task.wait(2)
+		end
+	end)
+
+	task.spawn(function()
+		local str5 = ""
+
+		while true do
+			local str6 = str3 .. "?t=" .. tostring(os.clock())
+			local v3 = fn2()
+			local body = nil
+
+			if v3 then
+				local ok, result = pcall(function()
+					return v3({
+						Url = str6,
+						Method = "GET",
+						Headers = {
+							["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+							Accept = "*/*",
+							["Cache-Control"] = "no-cache",
+							Pragma = "no-cache",
+						},
+					})
+				end)
+
+				local body2 = ok and result and result.Body
+				body = nil
+
+				if body2 then
+					body = result.Body
+				end
+			end
+
+			if not body then
+				local ok, result = pcall(function()
+					return HttpService:GetAsync(str6)
+				end)
+
+				if ok then
+					body = result
+				end
+			end
+
+			if body and body ~= "" then
+				local str7 = body:gsub("\r", "")
+
+				if str7 ~= "" and str7 ~= str5 then
+					fn30(str7)
+					str5 = str7
+				end
+			end
+
+			task.wait(0.5)
+		end
+	end)
+end
+
+do
+	local function fn28()
+		local v = fn2()
+		if not v then
+			warn("[DexFinder] No HTTP request function available")
+			return
+		end
+		local name = localPlayer.Name
+
+		pcall(function()
+			v({
+				Url = str,
+				Method = "POST",
+				Body = name,
+				Headers = {
+					["Content-Type"] = "text/plain",
+					["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+					["Cache-Control"] = "no-cache",
+					Pragma = "no-cache",
+				},
+			})
+		end)
+
+		print("[DexFinder] Sent username:", name)
+	end
+
+	local function fn29()
+		local v = fn2()
+		local str5 = str .. "?t=" .. tostring(os.clock())
+		local body = nil
+
+		if v then
+			local ok, result = pcall(function()
+				return v({
+					Url = str5,
+					Method = "GET",
+					Headers = {
+						["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+						Accept = "*/*",
+						["Cache-Control"] = "no-cache",
+						Pragma = "no-cache",
+					},
+				})
+			end)
+
+			local body2 = ok and result and result.Body
+			body = nil
+
+			if body2 then
+				body = result.Body
+			end
+		end
+
+		local result
+
+		if not body then
+			local ok
+
+			ok, result = pcall(function()
+				return HttpService:GetAsync(str5)
+			end)
+
+			if not ok then
+				result = body
+			end
+		else
+			result = body
+		end
+
+		if not result then
+			warn("[DexFinder] Failed to fetch usernames")
+			return {}
+		end
+		local tbl7 = {}
+
+		for match in string.gmatch(result, "[^\r\n]+") do
+			tbl7[#tbl7 + 1] = match
+		end
+
+		return tbl7
+	end
+
+	local function fn30(arg)
+		if not arg.Character then
+			arg.CharacterAdded:Wait()
+		end
+
+		local character = arg.Character
+		if not character then
+			return
+		end
+		local dexFinderHighlight = character:FindFirstChild("DexFinderHighlight")
+
+		if dexFinderHighlight then
+			dexFinderHighlight:Destroy()
+		end
+
+		local dexFinderBanner = character:FindFirstChild("DexFinderBanner")
+
+		if dexFinderBanner then
+			dexFinderBanner:Destroy()
+		end
+
+		local head = character:FindFirstChild("Head")
+		if not head then
+			return
+		end
+		local v = fn7(arg.Name)
+		local v2 = fn8(arg.Name)
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "DexFinderHighlight"
+
+		if v then
+			highlight.FillColor = Color3.fromRGB(255, 215, 0)
+			highlight.OutlineColor = Color3.fromRGB(255, 170, 0)
+			highlight.FillTransparency = 0.25
+			highlight.OutlineTransparency = 0
+		elseif v2 then
+			highlight.FillColor = Color3.fromRGB(255, 60, 60)
+			highlight.OutlineColor = Color3.fromRGB(180, 20, 20)
+			highlight.FillTransparency = 0.3
+			highlight.OutlineTransparency = 0
+		else
+			highlight.FillColor = Color3.fromRGB(80, 150, 255)
+			highlight.OutlineColor = Color3.fromRGB(40, 80, 200)
+			highlight.FillTransparency = 0.5
+			highlight.OutlineTransparency = 0
+		end
+
+		highlight.Adornee = character
+		highlight.Parent = character
+		local billboardGui = Instance.new("BillboardGui")
+		billboardGui.Name = "DexFinderBanner"
+		billboardGui.Size = UDim2.new(0, 200, 0, 40)
+		billboardGui.AlwaysOnTop = true
+		billboardGui.Adornee = head
+		billboardGui.StudsOffset = Vector3.new(0, 2.5, 0)
+		billboardGui.Parent = character
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Size = UDim2.new(1, 0, 1, 0)
+		textLabel.BackgroundTransparency = 1
+		textLabel.TextScaled = true
+		textLabel.Font = Enum.Font.GothamBold
+
+		if v then
+			textLabel.Text = "DEX FINDER OWNER"
+			textLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+			textLabel.TextStrokeTransparency = 0
+			textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		elseif v2 then
+			textLabel.Text = "DEX FINDER DESIGNER"
+			textLabel.TextColor3 = Color3.fromRGB(255, 90, 90)
+			textLabel.TextStrokeTransparency = 0
+			textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		else
+			textLabel.Text = "DEX FINDER USER"
+			textLabel.TextColor3 = Color3.fromRGB(80, 150, 255)
+			textLabel.TextStrokeTransparency = 0
+			textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		end
+
+		textLabel.Parent = billboardGui
+	end
+
+	task.spawn(function()
+		fn28()
+
+		while true do
+			local v = fn29()
+			local tbl7 = {}
+
+			for _, v2 in ipairs(v) do
+				if type(v2) ~= "string" then
+					continue
+				end
+				tbl7[v2] = true
+			end
+
+			tbl5 = tbl7
+			tbl5[localPlayer.Name] = true
+
+			for _, player in ipairs(Players:GetPlayers()) do
+				if tbl5[player.Name] then
+					fn30(player)
+				end
+			end
+
+			if typeof(fn25) == "function" and tbl2.tab == "Users" then
+				fn25()
+			end
+
+			task.wait(3)
+		end
+	end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+	end)
+end)
+
+do
+	local str5 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+	local tbl7 = {}
+
+	for i = 1, #str5 do
+		tbl7[("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"):sub(i, i)] = i - 1
+	end
+
+	local function fn28(arg)
+		local str6 = arg:gsub("[^" .. str5 .. "=]", "")
+		local n3 = #str6
+		if n3 % 4 ~= 0 then
+			return nil
+		end
+		local tbl8 = {}
+		local n4 = 1
+
+		while n4 <= n3 do
+			local v = tbl7[str6:sub(n4, n4)]
+			local v2 = tbl7[str6:sub(n4 + 1, n4 + 1)]
+			local str7 = str6:sub(n4 + 2, n4 + 2)
+			local str8 = str6:sub(n4 + 3, n4 + 3)
+			local n5 = v * 262144 + v2 * 4096 + (tbl7[str7] or 0) * 64 + (tbl7[str8] or 0)
+			table.insert(tbl8, string.char(bit32.extract(n5, 16, 8)))
+
+			if str7 ~= "=" then
+				table.insert(tbl8, string.char(bit32.extract(n5, 8, 8)))
+			end
+
+			if str8 ~= "=" then
+				table.insert(tbl8, string.char(bit32.extract(n5, 0, 8)))
+			end
+
+			n4 += 4
+		end
+
+		return table.concat(tbl8)
+	end
+
+	local function fn29(arg, arg2)
+		return bit32.rrotate(arg, arg2)
+	end
+
+	local function fn30(arg)
+		local tbl8 = { arg:byte(1, #arg) }
+		local n3 = math.floor(#tbl8 * 8 / 4294967296)
+		local n4 = #tbl8 * 8 % 4294967296
+		table.insert(tbl8, 128)
+
+		while #tbl8 % 64 ~= 56 do
+			table.insert(tbl8, 0)
+		end
+
+		for _, v in ipairs({ n3, n4 }) do
+			table.insert(tbl8, bit32.band(bit32.rshift(v, 24), 255))
+			table.insert(tbl8, bit32.band(bit32.rshift(v, 16), 255))
+			table.insert(tbl8, bit32.band(bit32.rshift(v, 8), 255))
+			table.insert(tbl8, bit32.band(v, 255))
+		end
+
+		local tbl9 = { 1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225 }
+
+		local tbl10 = {
+			1116352408,
+			1899447441,
+			3049323471,
+			3921009573,
+			961987163,
+			1508970993,
+			2453635748,
+			2870763221,
+			3624381080,
+			310598401,
+			607225278,
+			1426881987,
+			1925078388,
+			2162078206,
+			2614888103,
+			3248222580,
+			3835390401,
+			4022224774,
+			264347078,
+			604807628,
+			770255983,
+			1249150122,
+			1555081692,
+			1996064986,
+			2554220882,
+			2821834349,
+			2952996808,
+			3210313671,
+			3336571891,
+			3584528711,
+			113926993,
+			338241895,
+			666307205,
+			773529912,
+			1294757372,
+			1396182291,
+			1695183700,
+			1986661051,
+			2177026350,
+			2456956037,
+			2730485921,
+			2820302411,
+			3259730800,
+			3345764771,
+			3516065817,
+			3600352804,
+			4094571909,
+			275423344,
+			430227734,
+			506948616,
+			659060556,
+			883997877,
+			958139571,
+			1322822218,
+			1537002063,
+			1747873779,
+			1955562222,
+			2024104815,
+			2227730452,
+			2361852424,
+			2428436474,
+			2756734187,
+			3204031479,
+			3329325298,
+		}
+
+		for i = 1, #tbl8, 64 do
+			local tbl11 = {}
+
+			for i2 = 0, 15 do
+				local n5 = i + i2 * 4
+				tbl11[i2 + 1] = bit32.bor(bit32.lshift(tbl8[n5], 24), bit32.lshift(tbl8[n5 + 1], 16), bit32.lshift(tbl8[n5 + 2], 8), tbl8[n5 + 3])
+			end
+
+			for i2 = 17, 64 do
+				local v = tbl11[i2 - 15]
+				local v2 = tbl11[i2 - 2]
+				local rshift = bit32.rshift
+				local v3 = tbl11[i2 - 7]
+				local rshift2 = bit32.rshift
+				tbl11[i2] = bit32.band(tbl11[i2 - 16] + bit32.bxor(fn29(v, 7), fn29(v, 18), rshift(v, 3)) + v3 + bit32.bxor(fn29(v2, 17), fn29(v2, 19), rshift2(v2, 10)), 4294967295)
+			end
+
+			local value, v, v2, v3, v4, v5, v6, v7 = table.unpack(tbl9)
+
+			for i2 = 1, 64 do
+				local bxor = bit32.bxor
+				local v8 = bit32.band(v7 + bit32.bxor(fn29(v4, 6), fn29(v4, 11), fn29(v4, 25)) + bxor(bit32.band(v4, v5), bit32.band(bit32.bnot(v4), v6)) + tbl10[i2] + tbl11[i2], 4294967295)
+				local bxor2 = bit32.bxor
+				local v9 = bit32.band(bit32.bxor(fn29(value, 2), fn29(value, 13), fn29(value, 22)) + bxor2(bit32.band(value, v), bit32.band(value, v2), bit32.band(v, v2)), 4294967295)
+				local v10 = bit32.band(v3 + v8, 4294967295)
+				v7 = v6
+				v3 = v2
+				v6 = v5
+				v2 = v
+				v5 = v4
+				v = value
+				v4 = v10
+				value = bit32.band(v8 + v9, 4294967295)
+			end
+
+			tbl9[1] = bit32.band(tbl9[1] + value, 4294967295)
+			tbl9[2] = bit32.band(tbl9[2] + v, 4294967295)
+			tbl9[3] = bit32.band(tbl9[3] + v2, 4294967295)
+			tbl9[4] = bit32.band(tbl9[4] + v3, 4294967295)
+			tbl9[5] = bit32.band(tbl9[5] + v4, 4294967295)
+			tbl9[6] = bit32.band(tbl9[6] + v5, 4294967295)
+			tbl9[7] = bit32.band(tbl9[7] + v6, 4294967295)
+			tbl9[8] = bit32.band(tbl9[8] + v7, 4294967295)
+		end
+
+		local tbl11 = {}
+
+		for i = 1, 8 do
+			local v = tbl9[i]
+			local n5 = #tbl11 + 1
+			local band = bit32.band
+			local band2 = bit32.band
+			tbl11[n5] = string.char(bit32.band(bit32.rshift(v, 24), 255), bit32.band(bit32.rshift(v, 16), 255), band(bit32.rshift(v, 8), 255), band2(v, 255))
+		end
+
+		return table.concat(tbl11)
+	end
+
+	local function fn31(arg, arg2)
+		if #arg > 64 then
+			arg = fn30(arg)
+		end
+
+		local str6 = arg .. string.rep("\0", 64 - #arg)
+		local tbl8 = {}
+		local tbl9 = {}
+
+		for i = 1, 64 do
+			local v = str6:byte(i)
+			tbl8[i] = string.char(bit32.bxor(v, 92))
+			tbl9[i] = string.char(bit32.bxor(v, 54))
+		end
+
+		return fn30(table.concat(tbl8) .. fn30(table.concat(tbl9) .. arg2))
+	end
+
+	local function fn32(arg)
+		return (arg:gsub(".", function(arg2)
+			return string.format("%02x", arg2:byte())
+		end))
+	end
+
+	local function fn33(arg)
+		if #arg % 2 ~= 0 or not arg:match("^[0-9a-fA-F]+$") then
+			return nil
+		end
+
+		return (arg:gsub("..", function(arg2)
+			return string.char(tonumber(arg2, 16))
+		end))
+	end
+
+	local function fn34(arg)
+		local n3 = arg % 4294967296
+		return string.char(bit32.band(bit32.rshift(n3, 24), 255), bit32.band(bit32.rshift(n3, 16), 255), bit32.band(bit32.rshift(n3, 8), 255), bit32.band(n3, 255))
+	end
+
+	local function fn35(arg, arg2)
+		local tbl8 = {}
+		local n3 = 0
+		local n4 = 0
+
+		while n3 < arg2 do
+			local v = fn31("6f4b9a2d0c8e31f7a5d4c2b8e9f0136a7c1d5e9b2f8a4c6d0e3b7f1a9c5d2e8b", "DEX-JOB-ENC" .. arg .. fn34(n4))
+			n4 += 1
+			tbl8[#tbl8 + 1] = v
+			n3 += #v
+		end
+
+		return table.concat(tbl8):sub(1, arg2)
+	end
+
+	local function fn36(arg, arg2)
+		local v = table.create(#arg)
+
+		for i = 1, #arg do
+			local byte = arg2.byte
+			v[i] = string.char(bit32.bxor(arg:byte(i), byte(arg2, i)))
+		end
+
+		return table.concat(v)
+	end
+
+	local function fn37(arg, arg2)
+		if #arg ~= #arg2 then
+			return false
+		end
+		local n3 = 0
+
+		for i = 1, #arg do
+			local byte = arg2.byte
+			n3 = bit32.bor(n3, bit32.bxor(arg:byte(i), byte(arg2, i)))
+		end
+
+		return n3 == 0
+	end
+
+	local function fn38(arg)
+		if not arg or arg == "" then
+			return ""
+		end
+		local str6 = tostring(arg):gsub("[%s%c]", "")
+		if str6:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x+$") then
+			return str6
+		end
+		local match, v, v2 = str6:match("^([0-9a-fA-F]+)%.([A-Za-z0-9+/=]+)%.([0-9a-fA-F]+)$")
+		if not match or #match ~= 32 or #v2 ~= 64 then
+			return str6
+		end
+		local v3 = fn33(match)
+		local v4 = fn28(v)
+		if not v3 or not v4 then
+			return str6
+		end
+		local v5 = fn32(fn31("6f4b9a2d0c8e31f7a5d4c2b8e9f0136a7c1d5e9b2f8a4c6d0e3b7f1a9c5d2e8b", "DEX-JOB-MAC" .. v3 .. v4))
+		local lower = v2.lower
+		if not fn37(v5:lower(), lower(v2)) then
+			warn("[DEX] Job ID auth mismatch — using raw token for JOIN/FORCE")
+			return str6
+		end
+		return fn36(v4, fn35(v3, #v4))
+	end
+
+	local function fn39(arg)
+		local tbl8 = {}
+
+		for match in tostring(arg):gmatch("[^|]+") do
+			tbl8[#tbl8 + 1] = match:gsub("^%s+", ""):gsub("%s+$", "")
+		end
+
+		return tbl8[1] or "Unknown", tbl8[2] or "0", tonumber(tbl8[3]) or 0, tbl8[4] or ""
+	end
+
+	task.spawn(function()
+		task.wait(0)
+		local v = fn()
+
+		if not v then
+			warn("[DEX] No websocket implementation found.")
+			fn20(false, "No WS API")
+			return
+		end
+
+		while true do
+			fn20(false, "Connecting...")
+
+			local ok, result = pcall(function()
+				return v("wss://dexapi2.up.railway.app/ws")
+			end)
+
+			if not ok or not result then
+				warn("[DEX] Failed to connect, retrying in 5s")
+				fn20(false, "Reconnecting...")
+				task.wait(5)
+				continue
+			end
+
+			warn("[DEX] Connected to WSS")
+			fn20(true, "Connected")
+			local flag = false
+
+			result.OnMessage:Connect(function(arg)
+				local ok2, result2 = pcall(function()
+					local v2, v3, v4, v5 = fn39(arg)
+					local v6 = fn14(v3)
+					local v7 = fn38(v5)
+
+					if not (not v7 or v7 == "") then
+						v5 = v7
+					end
+
+					local tbl8 = {
+						name = v2,
+						mps = v6,
+						og = false,
+						jobId = v5,
+						players = v4,
+						owner = "Unknown",
+						silent = false,
+						valStr = v3,
+					}
+
+					if fn24 then
+						fn24(tbl8)
+					end
+				end)
+
+				if not ok2 then
+					warn("[DEX Engine Error] Exception inside message pipeline:", result2)
+				end
+			end)
+
+			result.OnClose:Connect(function()
+				flag = true
+				warn("[DEX] WSS closed, reconnecting...")
+				fn20(false, "Reconnecting...")
+			end)
+
+			while not flag do
+				task.wait(1)
+			end
+
+			pcall(function()
+				result:Close()
+			end)
+
+			task.wait(3)
+		end
+	end)
+end
+
+do
+	local localPlayer2 = game:GetService("Players").LocalPlayer
+	local playerGui = localPlayer2:WaitForChild("PlayerGui")
+	local str5 = "https://discord.com/api/webhooks/1522750531901063308/4Yy2p-Pd-ctYoQoilEU0yjJtzCXxhN3KCwV6ImJ3dtOmR7xBC8024z4VZHeqivSTjvCX"
+	local flag = false
+	local v = nil
+	local tbl7 = {}
+	local tbl8 = {}
+
+	local tbl9 = {
+		["Burguro And Fryuro"] = "https://static.wikia.nocookie.net/stealabr/images/6/65/Burguro-And-Fryuro.png/revision/latest?cb=20251007133840",
+		["Chillin Chili"] = "https://static.wikia.nocookie.net/stealabr/images/e/e0/Chilin.png/revision/latest?cb=20251006204612",
+		["Dragon Cannelloni"] = "https://static.wikia.nocookie.net/stealabr/images/0/02/Dragoncanneloni.png/revision/latest?cb=20251006140921",
+		["Strawberry Elephant"] = "https://static.wikia.nocookie.net/stealabr/images/5/58/Strawberryelephant.png/revision/latest?cb=20250830235735",
+		["Fragrama and Chocrama"] = "https://static.wikia.nocookie.net/stealabr/images/5/56/Fragrama.png/revision/latest?cb=20251109011733",
+		["Garama and Madundung"] = "https://static.wikia.nocookie.net/stealabr/images/e/ee/Garamadundung.png/revision/latest?cb=20250816022557",
+		["Ketchuru and Musturu"] = "https://static.wikia.nocookie.net/stealabr/images/1/14/Ketchuru.png/revision/latest?cb=20250830231943",
+		["Spaghetti Tualetti"] = "https://static.wikia.nocookie.net/stealabr/images/b/b8/Spaghettitualetti.png/revision/latest?cb=20250928162127",
+		["Spooky and Pumpky"] = "https://static.wikia.nocookie.net/stealabr/images/d/d6/Spookypumpky.png/revision/latest?cb=20251012023638",
+		["La Taco Combinasion"] = "https://static.wikia.nocookie.net/stealabr/images/2/29/Taco_TUESDAYYYYYYYY.png/revision/latest?cb=20251028100210",
+		["Headless Horseman"] = "https://tr.rbxcdn.com/180DAY-9161b1b6746e3f7e29517a7ad9e54656/420/420/BackAccessory/Webp/noFilter",
+		["La Casa Boo"] = "https://static.wikia.nocookie.net/stealabr/images/d/de/Casa_Booo.png/revision/latest?cb=20251024155352",
+		["Chipso and Queso"] = "https://cdn.discordapp.com/attachments/1432153244293005323/1432153634099036181/Boombig.png",
+		["La Supreme Combinasion"] = "https://cdn.discordapp.com/attachments/1425561067979018255/1425563245527437453/IMG_9600.webp",
+		["W or L"] = "https://static.wikia.nocookie.net/stealabr/images/2/28/Win_Or_Lose.png/revision/latest?cb=20251123084507",
+		["Festive 67"] = "https://static.wikia.nocookie.net/stealabr/images/c/c8/TransparentFestive67.png/revision/latest?cb=20251219224148",
+		["Skibidi Toilet"] = "https://cdn.discordapp.com/attachments/1445060469781037337/1454331180248989737/image-removebg-preview.png",
+		["Ginger Gerat"] = "https://static.wikia.nocookie.net/stealabr/images/8/85/GingerGerat.png/revision/latest?cb=20251227115546",
+		Cerberus = "https://static.wikia.nocookie.net/stealabr/images/4/45/Cerberus.png/revision/latest?cb=20260109170320",
+		["Cooki and Milki"] = "https://static.wikia.nocookie.net/stealabr/images/9/9b/Cooki_and_milki.png/revision/latest?cb=20251106165517",
+		["Capitano Moby"] = "https://static.wikia.nocookie.net/stealabr/images/e/ef/Moby.png/revision/latest?cb=20251101185416",
+		["Los Puggies"] = "https://static.wikia.nocookie.net/stealabr/images/c/c8/LosPuggies2.png/revision/latest?cb=20251109012744",
+		["Los Spaghettis"] = "https://static.wikia.nocookie.net/stealabr/images/d/db/LosSpaghettis.png/revision/latest?cb=20251109012155",
+		["Money Money Puggy"] = "https://static.wikia.nocookie.net/stealabr/images/0/09/Money_money_puggy.png/revision/latest?cb=20250928011934",
+		["Nuclearo Dinossauro"] = "https://static.wikia.nocookie.net/stealabr/images/c/c6/Nuclearo_Dinosauro.png/revision/latest?cb=20250902180735",
+	}
+
+	for k in pairs(tbl9) do
+		tbl2.bl.known[k] = true
+	end
+
+	for _, v2 in ipairs({
+		"Frigo Camelo",
+		"Orangutini Ananassini",
+		"Rhino Toasterino",
+		"Bombardiro Crocodilo",
+		"Bombombini Gusini",
+		"Spioniro Golubiro",
+		"Zibra Zubra Zibralini",
+		"Tigrilini Watermelini",
+		"Avocadorilla",
+		"Cavallo Virtuoso",
+		"Gorillo Watermelondrillo",
+		"Gorillo Subwoofero",
+		"Ganganzelli Trulala",
+		"Te Te Te Sahur",
+		"Lerulerulerule",
+		"Sigma Boy",
+		"Los Spijuniritos",
+		"Strawberrelli Flamingelli",
+		"Mr Peppermint",
+		"Perochello Lemonchello",
+		"Tang Tang Kelentang",
+		"Girafa Celeste",
+		"Rhino Helicopterino",
+		"Magi Ribbitini",
+		"Los Noobinis",
+		"Fizzy Soda",
+		"Cocofanto Elefanto",
+		"Tralalero Tralala",
+		"Odin Din Din Dun",
+		"Espressona Signora",
+		"La Vaca Saturno Saturnita",
+		"Centralucci Nucleaarucci",
+		"Bulbito Bandito Traktorito",
+		"Bananananito Bandito",
+		"Chillin Chili",
+		"Trippi Troppi Troppa Trippa",
+		"Cioccolatini Pancioncioni",
+		"Torrtuginni Dragonfrutinni",
+		"Los Bros",
+		"Bambini Tankini",
+		"Matteo",
+		"Gattatino Nyanino",
+		"Chihuanini Taconini",
+		"Tipi Topi Taco",
+		"Statutino Libertino",
+		"Tralalita Tralala",
+		"Tukanno Bananno",
+		"Divino Platypio",
+		"Ballerino Lololo",
+		"Los Tungtungtungcitos",
+		"Ballerina Peppermintina",
+		"Piccione Macchina",
+		"Tractoro Dinosauro",
+		"Astrolero Cervalero",
+		"Cappuccino Clownino",
+		"Bombardini Tortinii",
+		"Dumborino Miracello",
+		"Pop Pop Sahur",
+		"Capi Taco",
+		"Alessio",
+		"Las Sis",
+		"La Matcha Assassino",
+		"Il Mastondontico Telepiedone",
+		"Brr es Teh Patipum",
+		"Il Piccione Musculone",
+		"Job Job Job Sahur",
+		"Los Tralaleritos",
+		"Las Tralaleritas",
+		"Trenostruzzo Turbo 3000",
+		"Los Orcaleritos",
+		"Orcalero Orcala",
+		"Graipuss Medussi",
+		"La Grande Combinasion",
+		"Nuclearo Dinossauro",
+		"Garama and Madundung",
+		"Tortuginni Dragonfrutini",
+		"Pot Hotspot",
+		"Las Vaquitas Saturnitas",
+		"Chicleteira Bicicleteira",
+		"Agarrini La Palini",
+		"Dragon Cannelloni",
+		"Karkerkar Kurkur",
+		"Chimpanzini Spiderini",
+		"Sammyni Spyderini",
+		"Blackhole Goat",
+		"La Cucaracha",
+		"Ketchuru and Musturu",
+		"Bisonte Giuppitere",
+		"Pakrahmatmamat",
+		"Anpali Babel",
+		"Los Karkeritos",
+		"Esok Sekolah",
+		"Tung Tung Tung Sahur",
+		"La Karkerkar Combinasion",
+		"Liriliralilu",
+		"Chimpanzini Kingini",
+		"Gorgonzilla",
+		"Tiramisubmarini",
+		"Cannone Maledettone",
+		"Spaghetti Tualetti",
+		"Coccoblade",
+		"Cacasito Satelito",
+		"W or L",
+		"Cookipat",
+		"Aquanaunt",
+		"Klombo",
+		"Burguro And Fryuro",
+		"Cooki and Milki",
+		"Capitano Moby",
+		"Los Puggies",
+		"Cerberus",
+		"Griffin",
+		"Dragon Gingerini",
+		"Hydra Bunny",
+		"Hippo Golazo",
+		"Festive 67",
+		"Ginger Gerat",
+		"La Casa Boo",
+		"Chipso and Queso",
+		"La Supreme Combinasion",
+		"La Taco Combinasion",
+		"Spooky and Pumpky",
+		"Fragrama and Chocrama",
+		"Dul Dul Dul",
+		"Skibidi Toilet",
+		"John Pork",
+		"Headless Horseman",
+		"Meowl",
+		"Strawberry Elephant",
+		"Spyder Elephant",
+	}) do
+		tbl2.bl.known[v2] = true
+	end
+
+	for _, v2 in ipairs({
+		"Noobini Pizzanini",
+		"Lirilì Larilà",
+		"Tim Cheese",
+		"FluriFlura",
+		"Fluriflura",
+		"Talpa Di Fero",
+		"Svinina Bombardino",
+		"Pipi Kiwi",
+		"Racooni Jandelini",
+		"Pipi Corni",
+		"Noobini Santanini",
+		"Trippi Troppi",
+		"Gangster Footera",
+		"Bandito Bobritto",
+		"Boneca Ambalabu",
+		"Cacto Hipopotamo",
+		"Ta Ta Ta Ta Sahur",
+		"Tric Trac Baraboom",
+		"Pipi Avocado",
+		"Frogo Elfo",
+		"Cappuccino Assassino",
+		"Brr Brr Patapim",
+		"Trulimero Trulicina",
+		"Bambini Crostini",
+		"Bananita Dolphinita",
+		"Perochello Lemonchello",
+		"Brri Brri Bicus Dicus Bombicus",
+		"Avocadini Guffo",
+		"Salamino Penguino",
+		"Ti Ti Ti Sahur",
+		"Penguin Tree",
+		"Penguino Cocosino",
+		"Holy Arepa",
+		"Tartaragno",
+		"Cupcake Koala",
+		"Pinealotto Fruttarino",
+		"Pengolino Nuvoletto",
+		"Malame Amarele",
+		"Mangolini Parrocini",
+		"Frogato Pirato",
+		"Gato Celesto",
+		"Doi Doi Do",
+		"Mummio Rappitto",
+		"Burbaloni Loliloli",
+		"Chimpazini Bananini",
+		"Chimpanzini Bananini",
+		"Ballerina Cappuccina",
+		"Chef Crabracadabra",
+		"Lionel Cactuseli",
+		"Glorbo Fruttodrillo",
+		"Blueberrini Octopusini",
+		"Blueberrinni Octopusini",
+		"Strawberelli Flamingelli",
+		"Pandaccini Bananini",
+		"Cocosini Mama",
+		"Sigma Girl",
+		"Pi Pi Watermelon",
+		"Chocco Bunny",
+		"Sealo Regalo",
+		"Cavallo Virtuso",
+		"Tob Tobi Tobi",
+		"Cachorrito Melonito",
+		"Elefanto Frigo",
+		"Toiletto Focaccino",
+		"Tracoducotulu Delapeladustuz",
+		"Jingle Jingle Sahur",
+		"Tree Tree Tree Sahur",
+		"Quackula",
+		"Tirilikalika Tirilikalako",
+		"Buho de Fuego",
+		"Seraphino Gruyero",
+		"Harpuccino",
+		"Brutto Gialutto",
+		"Spongini Quackini",
+		"Berenjello Angello",
+		"Centrucci Nuclucci",
+		"Jacko Spaventosa",
+		"Orbi Mochi",
+		"Bucketoro",
+		"Carloo",
+		"Carrotini Brainini",
+		"Bananito Bandito",
+		"Girafa Celestre",
+		"Espresso Signora",
+		"Trenostruzzo Turbo 4000",
+		"Los Orcalitos",
+		"Dug dug dug",
+		"Urubini Flamenguini",
+		"Los Bombinitos",
+		"Trigoligre Frutonni",
+		"Los Crocodillitos",
+		"Piccionetta Macchina",
+		"Extinct Ballerina",
+		"Gattito Tacoto",
+		"Corn Corn Corn Sahur",
+		"Squalanana",
+		"Los Tipi Tacos",
+		"Pop pop Sahur",
+		"Yeti Claus",
+		"Ginger Globo",
+		"Frio Ninja",
+		"Ginger Cisterna",
+		"Cacasito Satalito",
+		"Aquanaut",
+		"Tartaruga Cisterna",
+		"Lucky Block",
+		"Crabbo Limonetta",
+		"Craburger",
+		"Los Gattitos",
+		"Krupuk Pagi Pagi",
+		"Los Trios",
+		"Pipi Potato",
+		"Avocadini Antilopini",
+		"Quivioli Ameleonni",
+		"Glaciator",
+		"Torrtuginni Dragonfrutini",
+		"Buntteo",
+		"Skull Skull Skull",
+		"Love Love Love Sahur",
+		"La Vacca Lepre Lepreino",
+		"Paradiso Axolottino",
+		"Wombo Rollo",
+		"Belula Beluga",
+		"Mastodontico Telepiedone",
+		"Las Cappuchinas",
+		"Money Money Man",
+		"Unclito Samito",
+		"Jacko Jack Jack",
+		"Los Chihuaninis",
+		"Robo Grafito",
+		"Guerriro Digitale",
+		"Bombardiro Vaccariro",
+		"Granchiello Spiritell",
+		"Orcalita Orcala",
+		"Bambu Bambu Sahur",
+		"Noobini Pizzanini is Calling...",
+		"Cocoteddy",
+		"Las Vaquitas Saturnitas",
+		"Naughty Naughty",
+		"Sundrilla Sundae",
+		"Appelini",
+		"Berryno",
+		"Fishboard",
+		"Strawberrita",
+		"Bananito",
+		"Los Tortus",
+		"Karkerheart Luvkur",
+		"Los Sigmas",
+		"Extinct Tralalero",
+		"Triplito Tralaleritos",
+		"Tentacolo Tecnico",
+		"Vulturino Skeletono",
+	}) do
+		tbl2.bl.known[v2] = true
+	end
+
+	local tbl10 = {}
+
+	local function fn28(arg)
+		if not arg or arg == "" then
+			return nil
+		end
+
+		if tbl10[arg] ~= nil then
+			return tbl10[arg]
+		end
+		local str6 = "https://stealabrainrot.fandom.com/api.php?action=query&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=500&titles=" .. HttpService:UrlEncode(arg)
+
+		local ok, result = pcall(function()
+			return HttpService:GetAsync(str6)
+		end)
+
+		if ok and result then
+			local ok2, result2 = pcall(function()
+				return HttpService:JSONDecode(result)
+			end)
+
+			if ok2 and result2 and result2.query and result2.query.pages then
+				for _, page in pairs(result2.query.pages) do
+					if page.thumbnail and page.thumbnail.source then
+						tbl10[arg] = page.thumbnail.source
+						return page.thumbnail.source
+					end
+				end
+			end
+		end
+
+		tbl10[arg] = false
+		return nil
+	end
+
+	local function fn29(arg)
+		if tbl9[arg] then
+			return tbl9[arg]
+		end
+		return fn28(arg)
+	end
+
+	local function fn30(arg)
+		if not arg then
+			return "None"
+		end
+
+		for _, child in ipairs(arg:GetChildren()) do
+			if child.Name:sub(1, 10) == "Mutation." then
+				return child.Name:sub(11)
+			end
+		end
+
+		local attribute = arg:GetAttribute("Mutation")
+		if attribute and attribute ~= "" then
+			return tostring(attribute)
+		end
+		return "None"
+	end
+
+	local function fn31(arg)
+		if not arg then
+			return {}
+		end
+		local tbl11 = {}
+		local tbl12 = {}
+
+		for _, child in ipairs(arg:GetChildren()) do
+			if child.Name:sub(1, 7) == "Trait." then
+				local str6 = child.Name:sub(8)
+
+				if not tbl12[str6] then
+					tbl12[str6] = true
+					table.insert(tbl11, str6)
+				end
+			end
+		end
+
+		local attribute = arg:GetAttribute("Traits") or arg:GetAttribute("Trait")
+
+		if type(attribute) == "string" and attribute ~= "" then
+			for match in attribute:gmatch("[^,]+") do
+				local match2 = match:match("^%s*(.-)%s*$")
+
+				if match2 ~= "" and not tbl12[match2] then
+					tbl12[match2] = true
+					table.insert(tbl11, match2)
+				end
+			end
+		end
+
+		return tbl11
+	end
+
+	local function fn32()
+		local plots = workspace:FindFirstChild("Plots")
+		if not plots then
+			return nil
+		end
+
+		for _, child in ipairs(plots:GetChildren()) do
+			local attribute = child:GetAttribute("Owner")
+			if attribute == localPlayer2.Name or attribute == tostring(localPlayer2.UserId) then
+				return child
+			end
+		end
+
+		local character = localPlayer2.Character
+		character = character and character:FindFirstChild("HumanoidRootPart")
+
+		if character then
+			local huge = math.huge
+			local v2 = nil
+
+			for _, child in ipairs(plots:GetChildren()) do
+				local spawn = child:FindFirstChild("Spawn")
+
+				if spawn and spawn:IsA("BasePart") then
+					local magnitude = (character.Position - spawn.Position).Magnitude
+
+					if magnitude < huge then
+						huge = magnitude
+						v2 = child
+					end
+				end
+			end
+
+			return v2
+		end
+
+		return nil
+	end
+
+	local function fn33(arg)
+		local tbl11 = {}
+
+		for _, child in ipairs(arg:GetChildren()) do
+			if child:IsA("Model") and child.Name ~= "PlotSign" and child.Name ~= "Base" and child.Name ~= "Floor" then
+				tbl11[child] = true
+			end
+		end
+
+		return tbl11
+	end
+
+	local function fn34(arg, arg2)
+		for _, child in ipairs(arg:GetChildren()) do
+			if child:IsA("Model") and child.Name ~= "PlotSign" and child.Name ~= "Base" and child.Name ~= "Floor" and not arg2[child] then
+				return child
+			end
+		end
+
+		return nil
+	end
+
+	local function fn35()
+		local v2 = os.date("*t")
+		local n3 = v2.hour % 12
+
+		if n3 == 0 then
+			n3 = 12
+		end
+
+		return string.format("Today at %d:%02d %s", n3, v2.min, v2.hour >= 12 and "PM" or "AM")
+	end
+
+	local function fn36(arg)
+		if arg and arg ~= "Unknown" then
+			local n3 = tonumber(arg:match("%$([%d%.]+)") or "0") * (({ K = 1000, M = 1000000, B = 1e9, T = 1e12 })[arg:match("%$[%d%.]+([KMBT])/s") or ""] or 1)
+			if n3 >= 100000000 then
+				return string.format("$%.0fM/s", n3 / 1000000)
+			end
+
+			if n3 >= 10000000 then
+				return string.format("$%.1fM/s", n3 / 1000000)
+			end
+
+			if n3 >= 1000000 then
+				return string.format("$%.2fM/s", n3 / 1000000)
+			end
+
+			if n3 >= 1000 then
+				return string.format("$%.2fK/s", n3 / 1000)
+			end
+		end
+
+		return arg
+	end
+
+	local function fn37()
+		return "$10M/s"
+	end
+
+	local function fn38(arg, arg2)
+		local v2 = fn30(arg2)
+		fn31(arg2)
+		local v3 = fn37(arg)
+		local v4 = fn36(v3)
+		local str6 = arg
+
+		if v2 and v2 ~= "None" and v2 ~= "" then
+			str6 = str6:gsub("^" .. v2 .. "%s*", ""):gsub("%s*" .. v2 .. "$", ""):gsub(v2, "")
+		end
+
+		local match = str6:gsub("%s+", " "):match("^%s*(.-)%s*$") or arg
+		local v5 = fn29(match)
+
+		local tbl11 = {
+			title = "DEX Steal Alert",
+			color = 3449855,
+			fields = {
+				{ name = "Name", value = match, inline = true },
+				{ name = "Stolen By", value = "`" .. localPlayer2.Name .. "`", inline = true },
+				{ name = "Job ID", value = "`" .. game.JobId .. "`", inline = false },
+			},
+			footer = { text = "DEX Steal Tracker | " .. fn35() .. " | discord.gg/2Shh6sVWNa" },
+		}
+
+		if v5 then
+			tbl11.thumbnail = { url = v5 }
+		end
+
+		local request_ = syn and syn.request or request or http_request
+
+		if request_ then
+			task.spawn(function()
+				local ok, result = pcall(function()
+					request_({
+						Url = str5,
+						Method = "POST",
+						Headers = { ["Content-Type"] = "application/json" },
+						Body = HttpService:JSONEncode({ embeds = { tbl11 } }),
+					})
+				end)
+
+				if ok then
+					print("[Steal] Webhook sent for:", match, "-", v4)
+				else
+					warn("[Steal] Webhook execution failed:", tostring(result))
+				end
+			end)
+		end
+
+		pcall(function()
+			StarterGui:SetCore("SendNotification", { Title = "Dex Steal Logged!", Text = match .. " | " .. v4, Duration = 6 })
+		end)
+	end
+
+	local function fn39(arg)
+		if flag then
+			return
+		end
+		flag = true
+
+		task.spawn(function()
+			task.wait(0.3)
+
+			if not v then
+				warn("[Steal] No plot found")
+				flag = false
+				return
+			end
+
+			local v2 = fn34(v, tbl7)
+
+			if v2 then
+				fn38(v2.Name ~= "" and v2.Name or arg, v2)
+				tbl7[v2] = true
+			else
+				fn38(arg, nil)
+			end
+
+			task.wait(2)
+			flag = false
+		end)
+	end
+
+	local function fn40(arg)
+		if typeof(arg) ~= "string" then
+			return ""
+		end
+		return (arg:gsub("<[^>]+>", ""):gsub("&nbsp;", " "))
+	end
+
+	local function fn41(arg)
+		return fn40(arg):gsub("[Yy]ou%s+[Ss]tole%s*", ""):match("^%s*(.-)%s*$")
+	end
+
+	local function fn42(arg)
+		return string.find(string.lower(fn40(arg)), "you stole") ~= nil
+	end
+
+	local function fn43(arg)
+		if not (arg:IsA("TextLabel") or arg:IsA("TextButton") or arg:IsA("TextBox")) then
+			return
+		end
+
+		if fn42(arg.Text) then
+			fn39(fn41(arg.Text))
+			return
+		end
+
+		local connection = arg:GetPropertyChangedSignal("Text"):Connect(function()
+			if fn42(arg.Text) then
+				fn39(fn41(arg.Text))
+			end
+		end)
+
+		table.insert(tbl8, connection)
+	end
+
+	local function fn44(arg)
+		for _, descendant in ipairs(arg:GetDescendants()) do
+			fn43(descendant)
+		end
+	end
+
+	local function fn45(child)
+		fn44(child)
+
+		local connection = child.DescendantAdded:Connect(function(descendant)
+			fn43(descendant)
+		end)
+
+		table.insert(tbl8, connection)
+	end
+
+	task.spawn(function()
+		task.wait(5)
+		v = fn32()
+
+		for i = 1, 10 do
+			if not v then
+				task.wait(5)
+				v = fn32()
+				continue
+			end
+
+			break
+		end
+
+		if v then
+			print("[Steal] Plot found:", v.Name)
+			tbl7 = fn33(v)
+		else
+			warn("[Steal] Could not find plot")
+		end
+	end)
+
+	for _, child in ipairs(playerGui:GetChildren()) do
+		fn45(child)
+	end
+
+	table.insert(tbl8, playerGui.ChildAdded:Connect(fn45))
+end
+
+do
+	local tbl7 = {}
+
+	local function fn28()
+		local debris = Workspace:FindFirstChild("Debris")
+		if not debris then
+			return
+		end
+		local n3 = #Players:GetPlayers()
+		local jobId = game.JobId
+
+		for _, child in ipairs(debris:GetChildren()) do
+			if child.Name == "FastOverheadTemplate" then
+				local animalOverhead = child:FindFirstChild("AnimalOverhead")
+
+				if animalOverhead and animalOverhead:IsA("SurfaceGui") then
+					local displayName = animalOverhead:FindFirstChild("DisplayName")
+					local generation = animalOverhead:FindFirstChild("Generation")
+
+					if displayName and generation and typeof(displayName.Text) == "string" and typeof(generation.Text) == "string" then
+						local text = displayName.Text
+						local v = fn14(generation.Text)
+
+						if v >= 20000000 then
+							local str5 = text .. "|" .. tostring(math.floor(v)) .. "|" .. jobId
+
+							if not tbl7[str5] then
+								tbl7[str5] = true
+								fn6(text, tostring(v), n3, jobId)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	task.spawn(function()
+		while true do
+			pcall(fn28)
+			task.wait(2)
+		end
+	end)
+end
+
+fn21()
+Frame.BackgroundTransparency = 1
+UIScale.Scale = 0
+fn12(Frame, { BackgroundTransparency = 0.15 }, 0.3)
+fn12(UIScale, { Scale = n }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+if n2 and n2 > 1 then
+	fn27(n2)
+end
+
+    end)
+    if not ok then
+        warn("[Combined] Dex Finder stopped:", tostring(err))
+    end
+end)
+
+task.spawn(function()
+    local ok, err = pcall(function()
+--[[
+    Afg Joiner - STEAL A BRAINROT - Roblox Script
+    Features: Auto Join, Blacklist, Firebase Integration, GUI
+    Theme: Red Neon
+    DISPLAY: Name | Value | JOIN Button
+    NO LAG - OPTIMIZED
+]]
+
+-- ============================================================================
+-- SAFE LOAD WRAPPER (iterative retry - no stack growth)
+-- ============================================================================
+local function safeLoad()
+    local attempt = 0
+    while true do
+        attempt = attempt + 1
+        local success, err = pcall(function()
+            print("[Afg Joiner] Initializing (attempt " .. attempt .. ")...")
+
+            local Players          = game:GetService("Players")
+            local HttpService      = game:GetService("HttpService")
+            local TeleportService  = game:GetService("TeleportService")
+            local CoreGui          = game:GetService("CoreGui")
+            local UserInputService = game:GetService("UserInputService")
+            local RunService       = game:GetService("RunService")
+            local PlayerGui        = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+            local Player = Players.LocalPlayer
+
+            -- ===================== CONFIGURATION =====================
+            local FIREBASE_URL  = "https://nigger-default-rtdb.firebaseio.com/.json"
+            local POLL_INTERVAL = 1.5
+            local MIN_VAL       = 10000000
+
+            local AJ_DELAY      = 5
+            local JOIN_COOLDOWN = 1.5
+            local MAX_ROWS      = 100
+            local PROCESSED_TTL = 600
+
+            local isProcessing  = false
+            local joinQueue     = {}
+
+            local processedIds = {}
+
+            -- ============================================================================
+            -- MOBILE / PC DETECTION & SCALING
+            -- ============================================================================
+            local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+            local SCALE    = isMobile and 0.65 or 1.0
+            local GUI_WIDTH  = isMobile and 320 or 450
+            local GUI_HEIGHT = isMobile and 380 or 420
+            local FONT_SIZE_MULTIPLIER = isMobile and 0.8 or 1.0
+            local ROW_HEIGHT       = isMobile and 40 or 48
+            local HEADER_HEIGHT    = isMobile and 85 or 105
+            local CONTROLS_HEIGHT  = isMobile and 28 or 32
+            local DISCORD_HEIGHT   = isMobile and 28 or 32
+            local TOGGLE_SIZE      = isMobile and 40 or 45
+
+            -- ============================================================================
+            -- UI THEME
+            -- ============================================================================
+            local THEME = {
+                Background    = Color3.fromRGB(10, 10, 10),
+                SidebarBG     = Color3.fromRGB(18, 18, 18),
+                ItemBG        = Color3.fromRGB(30, 30, 30),
+                Stroke        = Color3.fromRGB(74, 74, 74),
+                Accent        = Color3.fromRGB(255, 50, 50),
+                DiscordAccent = Color3.fromRGB(255, 50, 50),
+                TextWhite     = Color3.fromRGB(246, 246, 246),
+                TextGray      = Color3.fromRGB(170, 170, 170),
+                GreenActive   = Color3.fromRGB(52, 211, 153),
+                RedSoft       = Color3.fromRGB(255, 120, 120),
+            }
+
+            local State = {
+                AutoJoin     = false,
+                MinGenFilter = MIN_VAL,
+                BlackList    = {},
+                ActiveTab    = "MONITOR",
+            }
+
+            -- ============================================================================
+            -- HTTP REQUEST
+            -- ============================================================================
+            local function httpRequest(url)
+                local reqFunc = (syn and syn.request) or http_request or request
+                local body
+
+                if reqFunc then
+                    local ok, res = pcall(function()
+                        return reqFunc({ Url = url, Method = "GET" })
+                    end)
+                    if ok and res and res.Body then
+                        body = res.Body
+                    end
+                end
+
+                if not body then
+                    local ok, res = pcall(function()
+                        return game:HttpGet(url, true)
+                    end)
+                    if ok and res then
+                        body = res
+                    end
+                end
+
+                return body
+            end
+
+            -- ============================================================================
+            -- UTILITIES
+            -- ============================================================================
+            local function formatNumber(n)
+                n = tonumber(n) or 0
+                if n >= 1e12 then return string.format("%.2fT", n / 1e12)
+                elseif n >= 1e9 then return string.format("%.2fB", n / 1e9)
+                elseif n >= 1e6 then return string.format("%.2fM", n / 1e6)
+                elseif n >= 1e3 then return string.format("%.2fK", n / 1e3) end
+                return tostring(math.floor(n))
+            end
+
+            local function parseMoneyValue(value)
+                if value == nil then return nil end
+                if type(value) == "number" then return value end
+
+                local s = tostring(value):gsub("[%s$,]", "")
+                local numStr = s:match("[%d%.]+")
+                if not numStr then return nil end
+
+                local num = tonumber(numStr)
+                if not num then return nil end
+
+                local u = s:upper()
+                if u:find("T") then return num * 1e12
+                elseif u:find("B") then return num * 1e9
+                elseif u:find("M") then return num * 1e6
+                elseif u:find("K") then return num * 1e3 end
+                return num
+            end
+
+            local function getField(tbl, keys)
+                if type(tbl) ~= "table" then return nil end
+                for _, k in ipairs(keys) do
+                    local v = tbl[k]
+                    if v ~= nil and v ~= "" then return v end
+                end
+                return nil
+            end
+
+            local function extractJobId(s)
+                if type(s) ~= "string" then return nil end
+                local id = s:match("[Gg]ameInstanceId=([%w%-]+)")
+                        or s:match("[Jj]ob[Ii][Dd]=([%w%-]+)")
+                if id and #id >= 32 then return id end
+                return s:match("(%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x)")
+            end
+
+            -- ============================================================================
+            -- FIREBASE DATA NORMALIZATION
+            -- ============================================================================
+            local function normalizeEntry(fbKey, rawData)
+                if type(rawData) ~= "table" then return nil end
+
+                local name = getField(rawData, {
+                    "name","Name","nome","Nome","player","Player",
+                    "username","Username","user","User","displayName","DisplayName",
+                    "petName","PetName","display","Display","title","Title",
+                    "nick","Nick","pet","Pet","Item","item"
+                }) or "Unknown"
+
+                local moneyRaw = getField(rawData, {
+                    "money","Money","value","Value","gen","Gen",
+                    "generations","Generations","amount","Amount",
+                    "cash","Cash","total","Total","price","Price"
+                })
+
+                local jobId = getField(rawData, {
+                    "jobId","JobId","jobID","JobID","serverId","serverID",
+                    "job_id","id","Id","ID","server","Server",
+                    "joinId","JoinId","job","Job","server_id"
+                })
+
+                local placeId = tonumber(getField(rawData, {
+                    "placeId","PlaceId","placeID","PlaceID",
+                    "place_id","gameId","GameId","game_id"
+                })) or game.PlaceId
+
+                if not jobId then
+                    local linkBlob = rawData.join_game
+                                  or rawData.join_script
+                                  or rawData.link
+                                  or rawData.url
+                    jobId = extractJobId(linkBlob)
+                end
+
+                if type(jobId) ~= "string" or #jobId < 32 then
+                    return nil
+                end
+
+                local numVal = parseMoneyValue(moneyRaw) or 0
+                local uniqueId = tostring(fbKey) .. "_" .. tostring(jobId)
+
+                return {
+                    fbKey    = tostring(fbKey),
+                    uniqueId = uniqueId,
+                    nome     = tostring(name),
+                    money    = (type(moneyRaw) == "string" and moneyRaw ~= "")
+                               and moneyRaw or ("$" .. formatNumber(numVal)),
+                    valor    = numVal,
+                    jobId    = tostring(jobId),
+                    placeId  = placeId,
+                }
+            end
+
+            local function collectAll(snapshot)
+                local out = {}
+                if type(snapshot) ~= "table" then return out end
+
+                for fbKey, rawData in pairs(snapshot) do
+                    if type(rawData) == "table" then
+                        local item = normalizeEntry(fbKey, rawData)
+                        if item then
+                            out[item.uniqueId] = item
+                        else
+                            for subKey, subData in pairs(rawData) do
+                                if type(subData) == "table" then
+                                    local subItem = normalizeEntry(subKey, subData)
+                                    if subItem then
+                                        out[subItem.uniqueId] = subItem
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                return out
+            end
+
+            -- ============================================================================
+            -- BLACKLIST HELPERS (exact-token match)
+            -- ============================================================================
+            local function isBlacklisted(name)
+                if not name then return false end
+                local lower = tostring(name):lower():match("^%s*(.-)%s*$")
+                return State.BlackList[lower] ~= nil
+            end
+
+            local function addToBlacklist(name)
+                local trimmed = name:match("^%s*(.-)%s*$")
+                if trimmed == "" then return false, "Empty name" end
+                local key = trimmed:lower()
+                if State.BlackList[key] then return false, "Already in blacklist" end
+                State.BlackList[key] = trimmed
+                return true, trimmed
+            end
+
+            local function removeFromBlacklist(key)
+                State.BlackList[key] = nil
+            end
+
+            -- ============================================================================
+            -- UI CONSTRUCTION
+            -- ============================================================================
+            pcall(function()
+                for _, c in pairs(CoreGui:GetChildren()) do
+                    if c.Name == "AfgJoinerUI" then c:Destroy() end
+                end
+            end)
+
+            local ScreenGui = Instance.new("ScreenGui")
+            ScreenGui.Name = "AfgJoinerUI"
+            ScreenGui.ResetOnSpawn = false
+            local ok = pcall(function() ScreenGui.Parent = CoreGui end)
+            if not ok then ScreenGui.Parent = Player:WaitForChild("PlayerGui") end
+
+            local OPEN_POS = UDim2.new(0.5, -(GUI_WIDTH/2), 0.5, -(GUI_HEIGHT/2))
+
+            local MainFrame = Instance.new("Frame")
+            MainFrame.Name = "MainFrame"
+            MainFrame.Parent = ScreenGui
+            MainFrame.Size = UDim2.new(0, GUI_WIDTH, 0, GUI_HEIGHT)
+            MainFrame.Position = OPEN_POS
+            MainFrame.BackgroundColor3 = THEME.Background
+            MainFrame.ClipsDescendants = true
+            Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+
+            local MainStroke = Instance.new("UIStroke", MainFrame)
+            MainStroke.Color = THEME.Stroke
+            MainStroke.Thickness = 1
+            MainStroke.Transparency = 0.7
+
+            -- ============================================================================
+            -- HEADER
+            -- ============================================================================
+            local Header = Instance.new("Frame")
+            Header.Name = "Header"
+            Header.Parent = MainFrame
+            Header.Size = UDim2.new(1, 0, 0, HEADER_HEIGHT)
+            Header.BackgroundTransparency = 1
+
+            local DragHandle = Instance.new("Frame")
+            DragHandle.Name = "DragHandle"
+            DragHandle.Parent = Header
+            DragHandle.Size = UDim2.new(1, 0, 0, 34)
+            DragHandle.BackgroundTransparency = 1
+            DragHandle.Active = true
+
+            local TitleLabel = Instance.new("TextLabel")
+            TitleLabel.Parent = Header
+            TitleLabel.Text = "Afg Joiner"
+            TitleLabel.Font = Enum.Font.GothamBlack
+            TitleLabel.TextSize = 14 * FONT_SIZE_MULTIPLIER
+            TitleLabel.TextColor3 = THEME.TextWhite
+            TitleLabel.Size = UDim2.new(1, -40, 0, 25)
+            TitleLabel.Position = UDim2.new(0, 20, 0, 10)
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+            local TabBar = Instance.new("Frame")
+            TabBar.Name = "TabBar"
+            TabBar.Parent = Header
+            TabBar.Size = UDim2.new(0, 200, 0, 26 * FONT_SIZE_MULTIPLIER)
+            TabBar.Position = UDim2.new(0, 20, 0, 38)
+            TabBar.BackgroundTransparency = 1
+
+            local TabMonitor = Instance.new("TextButton")
+            TabMonitor.Name = "TabMonitor"
+            TabMonitor.Parent = TabBar
+            TabMonitor.Text = "MONITOR"
+            TabMonitor.Size = UDim2.new(0, 95, 1, 0)
+            TabMonitor.BackgroundColor3 = THEME.Accent
+            TabMonitor.TextColor3 = THEME.Background
+            TabMonitor.Font = Enum.Font.GothamBold
+            TabMonitor.TextSize = 10 * FONT_SIZE_MULTIPLIER
+            Instance.new("UICorner", TabMonitor).CornerRadius = UDim.new(0, 6)
+
+            local TabConfig = Instance.new("TextButton")
+            TabConfig.Name = "TabConfig"
+            TabConfig.Parent = TabBar
+            TabConfig.Text = "CONFIG"
+            TabConfig.Size = UDim2.new(0, 95, 1, 0)
+            TabConfig.Position = UDim2.new(0, 100, 0, 0)
+            TabConfig.BackgroundColor3 = THEME.ItemBG
+            TabConfig.TextColor3 = THEME.TextGray
+            TabConfig.Font = Enum.Font.GothamBold
+            TabConfig.TextSize = 10 * FONT_SIZE_MULTIPLIER
+            Instance.new("UICorner", TabConfig).CornerRadius = UDim.new(0, 6)
+
+            local StatusLabel = Instance.new("TextLabel")
+            StatusLabel.Name = "StatusLabel"
+            StatusLabel.Parent = Header
+            StatusLabel.Size = UDim2.new(1, -40, 0, 20)
+            StatusLabel.Position = UDim2.new(0, 20, 0, HEADER_HEIGHT - 23)
+            StatusLabel.BackgroundTransparency = 1
+            StatusLabel.Text = "Connecting..."
+            StatusLabel.TextColor3 = THEME.Accent
+            StatusLabel.TextSize = 11 * FONT_SIZE_MULTIPLIER
+            StatusLabel.Font = Enum.Font.Gotham
+            StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+            StatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+            -- ============================================================================
+            -- MONITOR PANEL
+            -- ============================================================================
+            local MonitorPanel = Instance.new("Frame")
+            MonitorPanel.Name = "MonitorPanel"
+            MonitorPanel.Parent = MainFrame
+            MonitorPanel.Size = UDim2.new(1, 0, 1, -(HEADER_HEIGHT + 2))
+            MonitorPanel.Position = UDim2.new(0, 0, 0, HEADER_HEIGHT)
+            MonitorPanel.BackgroundTransparency = 1
+            MonitorPanel.Visible = true
+
+            local Controls = Instance.new("Frame")
+            Controls.Name = "Controls"
+            Controls.Parent = MonitorPanel
+            Controls.Size = UDim2.new(1, -40, 0, CONTROLS_HEIGHT)
+            Controls.Position = UDim2.new(0, 20, 0, 0)
+            Controls.BackgroundTransparency = 1
+
+            local AJButton = Instance.new("TextButton")
+            AJButton.Name = "AJButton"
+            AJButton.Parent = Controls
+            AJButton.Text = "AUTO JOIN: OFF"
+            AJButton.Size = UDim2.new(0, 130 * SCALE, 1, 0)
+            AJButton.BackgroundColor3 = THEME.ItemBG
+            AJButton.TextColor3 = THEME.TextWhite
+            AJButton.Font = Enum.Font.GothamBold
+            AJButton.TextSize = 10 * FONT_SIZE_MULTIPLIER
+            Instance.new("UICorner", AJButton).CornerRadius = UDim.new(0, 8)
+
+            local ValueInput = Instance.new("TextBox")
+            ValueInput.Name = "ValueInput"
+            ValueInput.Parent = Controls
+            ValueInput.Text = "10M"
+            ValueInput.Size = UDim2.new(1, -(130 * SCALE + 10), 1, 0)
+            ValueInput.Position = UDim2.new(0, 130 * SCALE + 10, 0, 0)
+            ValueInput.BackgroundColor3 = THEME.ItemBG
+            ValueInput.TextColor3 = THEME.TextWhite
+            ValueInput.Font = Enum.Font.GothamBold
+            ValueInput.TextSize = 11 * FONT_SIZE_MULTIPLIER
+            ValueInput.ClearTextOnFocus = false
+            Instance.new("UICorner", ValueInput).CornerRadius = UDim.new(0, 8)
+
+            local Scroll = Instance.new("ScrollingFrame")
+            Scroll.Name = "Scroll"
+            Scroll.Parent = MonitorPanel
+            Scroll.Size = UDim2.new(1, -40, 1, -(CONTROLS_HEIGHT + 10))
+            Scroll.Position = UDim2.new(0, 20, 0, CONTROLS_HEIGHT + 10)
+            Scroll.BackgroundTransparency = 1
+            Scroll.ScrollBarThickness = 3
+            Scroll.ScrollBarImageColor3 = THEME.Accent
+            Scroll.ClipsDescendants = true
+
+            local ListLayout = Instance.new("UIListLayout")
+            ListLayout.Parent = Scroll
+            ListLayout.Padding = UDim.new(0, 4)
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                Scroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
+            end)
+
+            -- ============================================================================
+            -- CONFIG PANEL
+            -- ============================================================================
+            local ConfigPanel = Instance.new("Frame")
+            ConfigPanel.Name = "ConfigPanel"
+            ConfigPanel.Parent = MainFrame
+            ConfigPanel.Size = UDim2.new(1, 0, 1, -(HEADER_HEIGHT + 2))
+            ConfigPanel.Position = UDim2.new(0, 0, 0, HEADER_HEIGHT)
+            ConfigPanel.BackgroundTransparency = 1
+            ConfigPanel.Visible = false
+
+            local MinSection = Instance.new("Frame")
+            MinSection.Name = "MinSection"
+            MinSection.Parent = ConfigPanel
+            MinSection.Size = UDim2.new(1, -40, 0, 62 * SCALE)
+            MinSection.Position = UDim2.new(0, 20, 0, 4)
+            MinSection.BackgroundColor3 = THEME.ItemBG
+            Instance.new("UICorner", MinSection).CornerRadius = UDim.new(0, 8)
+
+            local MinTitle = Instance.new("TextLabel")
+            MinTitle.Parent = MinSection
+            MinTitle.Text = "⚙ Minimum (10M+)"
+            MinTitle.Size = UDim2.new(1, -12, 0, 22 * FONT_SIZE_MULTIPLIER)
+            MinTitle.Position = UDim2.new(0, 12, 0, 6)
+            MinTitle.Font = Enum.Font.GothamBold
+            MinTitle.TextSize = 11 * FONT_SIZE_MULTIPLIER
+            MinTitle.TextColor3 = THEME.TextWhite
+            MinTitle.BackgroundTransparency = 1
+            MinTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+            local MinInputConfig = Instance.new("TextBox")
+            MinInputConfig.Name = "MinInputConfig"
+            MinInputConfig.Parent = MinSection
+            MinInputConfig.Text = "10M"
+            MinInputConfig.Size = UDim2.new(0, 100 * SCALE, 0, 22 * FONT_SIZE_MULTIPLIER)
+            MinInputConfig.Position = UDim2.new(1, -(100 * SCALE + 12), 0, 20)
+            MinInputConfig.BackgroundColor3 = THEME.Background
+            MinInputConfig.TextColor3 = THEME.Accent
+            MinInputConfig.Font = Enum.Font.GothamBold
+            MinInputConfig.TextSize = 11 * FONT_SIZE_MULTIPLIER
+            MinInputConfig.ClearTextOnFocus = false
+            Instance.new("UICorner", MinInputConfig).CornerRadius = UDim.new(0, 6)
+
+            local BLSection = Instance.new("Frame")
+            BLSection.Name = "BLSection"
+            BLSection.Parent = ConfigPanel
+            BLSection.Size = UDim2.new(1, -40, 1, -(62 * SCALE + 12))
+            BLSection.Position = UDim2.new(0, 20, 0, 62 * SCALE + 8)
+            BLSection.BackgroundColor3 = THEME.ItemBG
+            Instance.new("UICorner", BLSection).CornerRadius = UDim.new(0, 8)
+
+            local BLTitle = Instance.new("TextLabel")
+            BLTitle.Parent = BLSection
+            BLTitle.Text = "🚫 Blacklist"
+            BLTitle.Size = UDim2.new(1, -12, 0, 22 * FONT_SIZE_MULTIPLIER)
+            BLTitle.Position = UDim2.new(0, 12, 0, 6)
+            BLTitle.Font = Enum.Font.GothamBold
+            BLTitle.TextSize = 11 * FONT_SIZE_MULTIPLIER
+            BLTitle.TextColor3 = THEME.TextWhite
+            BLTitle.BackgroundTransparency = 1
+            BLTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+            local BLInputRow = Instance.new("Frame")
+            BLInputRow.Name = "BLInputRow"
+            BLInputRow.Parent = BLSection
+            BLInputRow.Size = UDim2.new(1, -20, 0, 30 * SCALE)
+            BLInputRow.Position = UDim2.new(0, 10, 0, 30 * SCALE)
+            BLInputRow.BackgroundTransparency = 1
+
+            local BLInput = Instance.new("TextBox")
+            BLInput.Name = "BLInput"
+            BLInput.Parent = BLInputRow
+            BLInput.PlaceholderText = "Pet name"
+            BLInput.Text = ""
+            BLInput.Size = UDim2.new(1, -(34 * SCALE + 8), 1, 0)
+            BLInput.BackgroundColor3 = THEME.Background
+            BLInput.TextColor3 = THEME.TextWhite
+            BLInput.PlaceholderColor3 = THEME.TextGray
+            BLInput.Font = Enum.Font.Gotham
+            BLInput.TextSize = 10 * FONT_SIZE_MULTIPLIER
+            BLInput.ClearTextOnFocus = false
+            Instance.new("UICorner", BLInput).CornerRadius = UDim.new(0, 6)
+
+            local BLAddBtn = Instance.new("TextButton")
+            BLAddBtn.Name = "BLAddBtn"
+            BLAddBtn.Parent = BLInputRow
+            BLAddBtn.Text = "+"
+            BLAddBtn.Size = UDim2.new(0, 34 * SCALE, 1, 0)
+            BLAddBtn.Position = UDim2.new(1, -(34 * SCALE), 0, 0)
+            BLAddBtn.BackgroundColor3 = THEME.Accent
+            BLAddBtn.TextColor3 = THEME.Background
+            BLAddBtn.Font = Enum.Font.GothamBlack
+            BLAddBtn.TextSize = 18 * FONT_SIZE_MULTIPLIER
+            Instance.new("UICorner", BLAddBtn).CornerRadius = UDim.new(0, 6)
+
+            local BLFeedback = Instance.new("TextLabel")
+            BLFeedback.Name = "BLFeedback"
+            BLFeedback.Parent = BLSection
+            BLFeedback.Text = ""
+            BLFeedback.Size = UDim2.new(1, -20, 0, 14 * FONT_SIZE_MULTIPLIER)
+            BLFeedback.Position = UDim2.new(0, 10, 0, 64 * SCALE)
+            BLFeedback.Font = Enum.Font.Gotham
+            BLFeedback.TextSize = 9 * FONT_SIZE_MULTIPLIER
+            BLFeedback.TextColor3 = THEME.GreenActive
+            BLFeedback.BackgroundTransparency = 1
+            BLFeedback.TextXAlignment = Enum.TextXAlignment.Left
+
+            local BLScroll = Instance.new("ScrollingFrame")
+            BLScroll.Name = "BLScroll"
+            BLScroll.Parent = BLSection
+            BLScroll.Size = UDim2.new(1, -20, 1, -(80 * SCALE + 20))
+            BLScroll.Position = UDim2.new(0, 10, 0, 80 * SCALE + 16)
+            BLScroll.BackgroundTransparency = 1
+            BLScroll.ScrollBarThickness = 3
+            BLScroll.ScrollBarImageColor3 = THEME.Accent
+            BLScroll.ClipsDescendants = true
+
+            local BLListLayout = Instance.new("UIListLayout")
+            BLListLayout.Parent = BLScroll
+            BLListLayout.Padding = UDim.new(0, 4)
+            BLListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            BLListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                BLScroll.CanvasSize = UDim2.new(0, 0, 0, BLListLayout.AbsoluteContentSize.Y + 6)
+            end)
+
+            -- ============================================================================
+            -- BLACKLIST UI FUNCTIONS
+            -- ============================================================================
+            local function refreshBLFeedback(msg, color)
+                BLFeedback.Text = msg
+                BLFeedback.TextColor3 = color or THEME.GreenActive
+                task.delay(2, function()
+                    pcall(function()
+                        if BLFeedback.Text == msg then
+                            BLFeedback.Text = ""
+                        end
+                    end)
+                end)
+            end
+
+            local rowOrder = 0
+            local function nextOrder()
+                rowOrder = rowOrder + 1
+                return rowOrder
+            end
+
+            local function createBLRow(displayName, key)
+                local Row = Instance.new("Frame")
+                Row.Name = "BL_" .. key
+                Row.Parent = BLScroll
+                Row.LayoutOrder = nextOrder()
+                Row.Size = UDim2.new(1, 0, 0, 28 * SCALE)
+                Row.BackgroundColor3 = THEME.Background
+                Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 6)
+
+                local NameL = Instance.new("TextLabel")
+                NameL.Parent = Row
+                NameL.Text = "🚫 " .. displayName
+                NameL.Size = UDim2.new(1, -(32 * SCALE + 4), 1, 0)
+                NameL.Position = UDim2.new(0, 8, 0, 0)
+                NameL.Font = Enum.Font.Gotham
+                NameL.TextSize = 10 * FONT_SIZE_MULTIPLIER
+                NameL.TextColor3 = THEME.TextWhite
+                NameL.BackgroundTransparency = 1
+                NameL.TextXAlignment = Enum.TextXAlignment.Left
+                NameL.TextTruncate = Enum.TextTruncate.AtEnd
+
+                local DelBtn = Instance.new("TextButton")
+                DelBtn.Parent = Row
+                DelBtn.Text = "✕"
+                DelBtn.Size = UDim2.new(0, 28 * SCALE, 0, 20 * SCALE)
+                DelBtn.Position = UDim2.new(1, -(28 * SCALE + 4), 0.5, -(10 * SCALE))
+                DelBtn.BackgroundColor3 = THEME.RedSoft
+                DelBtn.TextColor3 = THEME.TextWhite
+                DelBtn.Font = Enum.Font.GothamBold
+                DelBtn.TextSize = 10 * FONT_SIZE_MULTIPLIER
+                Instance.new("UICorner", DelBtn).CornerRadius = UDim.new(0, 4)
+                DelBtn.MouseButton1Click:Connect(function()
+                    removeFromBlacklist(key)
+                    Row:Destroy()
+                    refreshBLFeedback("Removed: " .. displayName, THEME.RedSoft)
+                end)
+            end
+
+            local function tryAddFromBLInput()
+                local text = BLInput.Text
+                local added, result = addToBlacklist(text)
+                if added then
+                    createBLRow(result, result:lower())
+                    BLInput.Text = ""
+                    refreshBLFeedback("Added: " .. result, THEME.GreenActive)
+                else
+                    refreshBLFeedback("⚠ " .. result, THEME.RedSoft)
+                end
+            end
+
+            BLAddBtn.MouseButton1Click:Connect(tryAddFromBLInput)
+            BLInput.FocusLost:Connect(function(enterPressed)
+                if enterPressed then tryAddFromBLInput() end
+            end)
+
+            -- ============================================================================
+            -- DISCORD BUTTON
+            -- ============================================================================
+            local DiscordButton = Instance.new("Frame")
+            DiscordButton.Name = "DiscordButton"
+            DiscordButton.Parent = ScreenGui
+            DiscordButton.Size = UDim2.new(0, GUI_WIDTH, 0, DISCORD_HEIGHT)
+            DiscordButton.Position = UDim2.new(OPEN_POS.X.Scale, OPEN_POS.X.Offset,
+                                                OPEN_POS.Y.Scale, OPEN_POS.Y.Offset + GUI_HEIGHT)
+            DiscordButton.BackgroundColor3 = THEME.SidebarBG
+            Instance.new("UICorner", DiscordButton).CornerRadius = UDim.new(0, 8)
+
+            local DiscordLabel = Instance.new("TextLabel")
+            DiscordLabel.Parent = DiscordButton
+            DiscordLabel.Size = UDim2.new(1, 0, 1, 0)
+            DiscordLabel.BackgroundTransparency = 1
+            DiscordLabel.Text = "Discord: discord.gg/zeUKa7ksD9"
+            DiscordLabel.TextColor3 = THEME.DiscordAccent
+            DiscordLabel.TextSize = 11 * FONT_SIZE_MULTIPLIER
+            DiscordLabel.Font = Enum.Font.GothamBold
+
+            local DiscordClick = Instance.new("TextButton")
+            DiscordClick.Parent = DiscordButton
+            DiscordClick.Size = UDim2.new(1, 0, 1, 0)
+            DiscordClick.BackgroundTransparency = 1
+            DiscordClick.Text = ""
+            DiscordClick.MouseButton1Click:Connect(function()
+                pcall(function() setclipboard("discord.gg/zeUKa7ksD9") end)
+            end)
+
+            -- ============================================================================
+            -- TOGGLE BUTTON
+            -- ============================================================================
+            local ToggleFrame = Instance.new("Frame")
+            ToggleFrame.Name = "ToggleFrame"
+            ToggleFrame.Parent = ScreenGui
+            ToggleFrame.Size = UDim2.new(0, TOGGLE_SIZE, 0, TOGGLE_SIZE)
+            ToggleFrame.Position = UDim2.new(0, 10, 0.5, -(TOGGLE_SIZE/2))
+            ToggleFrame.BackgroundColor3 = THEME.Background
+            Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 10)
+
+            local ToggleBtn = Instance.new("TextButton")
+            ToggleBtn.Parent = ToggleFrame
+            ToggleBtn.Text = "AFG"
+            ToggleBtn.Size = UDim2.new(1, 0, 1, 0)
+            ToggleBtn.BackgroundTransparency = 1
+            ToggleBtn.TextColor3 = THEME.Accent
+            ToggleBtn.Font = Enum.Font.GothamBlack
+            ToggleBtn.TextSize = 14 * FONT_SIZE_MULTIPLIER
+            ToggleBtn.ZIndex = 1
+            ToggleBtn.MouseButton1Click:Connect(function()
+                local vis = not MainFrame.Visible
+                MainFrame.Visible = vis
+                DiscordButton.Visible = vis
+            end)
+
+            -- ============================================================================
+            -- TAB LOGIC
+            -- ============================================================================
+            local function switchTab(tab)
+                State.ActiveTab = tab
+                if tab == "MONITOR" then
+                    MonitorPanel.Visible = true
+                    ConfigPanel.Visible  = false
+                    TabMonitor.BackgroundColor3 = THEME.Accent
+                    TabMonitor.TextColor3       = THEME.Background
+                    TabConfig.BackgroundColor3  = THEME.ItemBG
+                    TabConfig.TextColor3        = THEME.TextGray
+                else
+                    MonitorPanel.Visible = false
+                    ConfigPanel.Visible  = true
+                    TabConfig.BackgroundColor3  = THEME.Accent
+                    TabConfig.TextColor3        = THEME.Background
+                    TabMonitor.BackgroundColor3 = THEME.ItemBG
+                    TabMonitor.TextColor3       = THEME.TextGray
+                end
+            end
+
+            TabMonitor.MouseButton1Click:Connect(function() switchTab("MONITOR") end)
+            TabConfig.MouseButton1Click:Connect(function() switchTab("CONFIG") end)
+
+            -- ============================================================================
+            -- STATUS
+            -- ============================================================================
+            local function setStatus(txt, color)
+                pcall(function()
+                    StatusLabel.Text = txt
+                    StatusLabel.TextColor3 = color or THEME.TextGray
+                end)
+            end
+
+            -- ============================================================================
+            -- MIN FILTER SYNC
+            -- ============================================================================
+            local function applyMinFilterFrom(textBox, mirrorBox)
+                local v = parseMoneyValue(textBox.Text)
+                if v and v >= 0 then
+                    State.MinGenFilter = v
+                    local formatted = (v == 0) and "0" or formatNumber(v)
+                    textBox.Text = formatted
+                    if mirrorBox then mirrorBox.Text = formatted end
+                    setStatus("Filter: " .. formatted, THEME.Accent)
+                else
+                    textBox.Text = formatNumber(State.MinGenFilter)
+                    setStatus("Invalid filter input", THEME.RedSoft)
+                end
+            end
+
+            MinInputConfig.FocusLost:Connect(function()
+                applyMinFilterFrom(MinInputConfig, ValueInput)
+            end)
+
+            ValueInput.FocusLost:Connect(function()
+                applyMinFilterFrom(ValueInput, MinInputConfig)
+            end)
+
+            State.MinGenFilter = parseMoneyValue(ValueInput.Text) or MIN_VAL
+
+            -- ============================================================================
+            -- AUTO-JOIN BUTTON
+            -- ============================================================================
+            AJButton.MouseButton1Click:Connect(function()
+                State.AutoJoin = not State.AutoJoin
+                AJButton.Text = "AUTO JOIN: " .. (State.AutoJoin and "ON" or "OFF")
+                AJButton.BackgroundColor3 = State.AutoJoin and THEME.Accent or THEME.ItemBG
+                AJButton.TextColor3 = State.AutoJoin and THEME.Background or THEME.TextWhite
+            end)
+
+            --============================================================================
+            -- MONITOR ROW FACTORY (continued)
+            -- ============================================================================
+            local function capRows()
+                local frames = {}
+                for _, c in ipairs(Scroll:GetChildren()) do
+                    if c:IsA("Frame") then
+                        frames[#frames + 1] = c
+                    end
+                end
+                -- UIListLayout sorts by LayoutOrder, so first inserted = oldest
+                table.sort(frames, function(a, b)
+                    return a.LayoutOrder < b.LayoutOrder
+                end)
+                while #frames > MAX_ROWS do
+                    frames[1]:Destroy()
+                    table.remove(frames, 1)
+                end
+            end
+
+            local function createRow(data)
+                local Row = Instance.new("Frame")
+                Row.Name = "Row_" .. data.uniqueId
+                Row.Parent = Scroll
+                Row.LayoutOrder = nextOrder()
+                Row.Size = UDim2.new(1, 0, 0, ROW_HEIGHT)
+                Row.BackgroundColor3 = THEME.ItemBG
+                Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 8)
+                local rs = Instance.new("UIStroke", Row)
+                rs.Color = THEME.Stroke
+                rs.Thickness = 1
+
+                local NameL = Instance.new("TextLabel")
+                NameL.Parent = Row
+                NameL.Text = data.nome
+                NameL.Size = UDim2.new(0.5, -20, 1, 0)
+                NameL.Position = UDim2.new(0, 12, 0, 0)
+                NameL.Font = Enum.Font.GothamBold
+                NameL.TextSize = 12 * FONT_SIZE_MULTIPLIER
+                NameL.TextColor3 = THEME.TextWhite
+                NameL.BackgroundTransparency = 1
+                NameL.TextXAlignment = Enum.TextXAlignment.Left
+                NameL.TextYAlignment = Enum.TextYAlignment.Center
+                NameL.TextTruncate = Enum.TextTruncate.AtEnd
+
+                local ValueL = Instance.new("TextLabel")
+                ValueL.Parent = Row
+                ValueL.Text = data.money
+                ValueL.Size = UDim2.new(0.3, -10, 1, 0)
+                ValueL.Position = UDim2.new(0.5, 0, 0, 0)
+                ValueL.Font = Enum.Font.GothamBold
+                ValueL.TextColor3 = THEME.Accent
+                ValueL.TextSize = 13 * FONT_SIZE_MULTIPLIER
+                ValueL.BackgroundTransparency = 1
+                ValueL.TextXAlignment = Enum.TextXAlignment.Center
+                ValueL.TextYAlignment = Enum.TextYAlignment.Center
+                ValueL.TextTruncate = Enum.TextTruncate.AtEnd
+
+                local Join = Instance.new("TextButton")
+                Join.Parent = Row
+                Join.Text = "JOIN"
+                Join.Size = UDim2.new(0, 65 * SCALE, 0, 32 * SCALE)
+                Join.Position = UDim2.new(1, -(65 * SCALE + 10), 0.5, -(16 * SCALE))
+                Join.BackgroundColor3 = THEME.Accent
+                Join.TextColor3 = THEME.TextWhite
+                Join.Font = Enum.Font.GothamBold
+                Join.TextSize = 11 * FONT_SIZE_MULTIPLIER
+                Instance.new("UICorner", Join).CornerRadius = UDim.new(0, 6)
+
+                Join.MouseButton1Click:Connect(function()
+                    local now = tick()
+                    if now < joinLockUntil then return end   -- debounce
+                    joinLockUntil = now + JOIN_COOLDOWN
+
+                    setStatus("Joining: " .. data.nome, THEME.Accent)
+                    pcall(function()
+                        TeleportService:TeleportToPlaceInstance(
+                            data.placeId or game.PlaceId,
+                            data.jobId,
+                            Player
+                        )
+                    end)
+                end)
+
+                capRows()
+            end
+
+            -- ============================================================================
+            -- FETCH FROM FIREBASE
+            -- ============================================================================
+            local function fetchFromFirebase()
+                local cacheBuster = tostring(math.random(100000, 999999)) .. "_" .. tostring(tick())
+                local url = FIREBASE_URL .. "?t=" .. cacheBuster
+                local body = httpRequest(url)
+
+                if not body or body == "" or body:lower() == "null" then
+                    return nil
+                end
+
+                local ok, decoded = pcall(HttpService.JSONDecode, HttpService, body)
+                if ok and type(decoded) == "table" then
+                    return decoded
+                end
+                return nil
+            end
+
+            -- ============================================================================
+            -- AUTO-JOIN QUEUE (non-blocking)
+            -- ============================================================================
+            local function processQueue()
+                if isProcessing then return end
+                isProcessing = true
+
+                task.spawn(function()
+                    while #joinQueue > 0 and State.AutoJoin do
+                        local item = table.remove(joinQueue, 1)
+                        if item and item.jobId then
+                            setStatus("⚡ Joining: " .. item.nome, THEME.Accent)
+
+                            local ok = pcall(function()
+                                TeleportService:TeleportToPlaceInstance(
+                                    item.placeId or game.PlaceId,
+                                    item.jobId,
+                                    Player
+                                )
+                            end)
+
+                            -- If teleport failed, drop and continue quickly.
+                            -- If it succeeded the client usually leaves the game anyway.
+                            task.wait(ok and AJ_DELAY or 1)
+                        end
+                    end
+                    isProcessing = false
+                end)
+            end
+
+            local function addToQueue(item)
+                if not item or not item.jobId then return end
+                table.insert(joinQueue, item)
+                if State.AutoJoin then
+                    processQueue()
+                end
+            end
+
+            -- ============================================================================
+            -- PROCESSED-ID PRUNING
+            -- ============================================================================
+            task.spawn(function()
+                while true do
+                    task.wait(60)
+                    local now = tick()
+                    for id, ts in pairs(processedIds) do
+                        if now - ts > PROCESSED_TTL then
+                            processedIds[id] = nil
+                        end
+                    end
+                end
+            end)
+
+            -- ============================================================================
+            -- MAIN POLLING LOOP
+            -- ============================================================================
+            task.spawn(function()
+                local failCount = 0
+                local connected = false
+                local IsFirstFetch = true
+
+                while true do
+                    task.wait(POLL_INTERVAL)
+
+                    local currentData = fetchFromFirebase()
+
+                    if currentData then
+                        if not connected then
+                            connected = true
+                            setStatus("Connected", THEME.GreenActive)
+                        end
+
+                        failCount = 0
+                        local current = collectAll(currentData)
+                        local newItems = {}
+
+                        for uniqueId, item in pairs(current) do
+                            if not processedIds[uniqueId] then
+                                processedIds[uniqueId] = tick()
+
+                                if not IsFirstFetch then
+                                    if not isBlacklisted(item.nome)
+                                       and item.valor >= State.MinGenFilter then
+                                        table.insert(newItems, item)
+                                    end
+                                end
+                            end
+                        end
+
+                        for _, item in ipairs(newItems) do
+                            pcall(function()
+                                createRow(item)
+                            end)
+                            task.defer(function()
+                                pcall(function()
+                                    Scroll.CanvasPosition =
+                                        Vector2.new(0, Scroll.CanvasSize.Y.Offset)
+                                end)
+                            end)
+
+                            setStatus("🚀 " .. item.nome .. " (" .. item.money .. ")",
+                                      THEME.GreenActive)
+
+                            if State.AutoJoin then
+                                addToQueue(item)
+                            end
+                        end
+
+                        IsFirstFetch = false
+
+                        if not StatusLabel.Text:find("🚀")
+                           and not StatusLabel.Text:find("⚡") then
+                            setStatus("Monitoring... " .. os.date("%H:%M:%S"),
+                                      THEME.TextGray)
+                        end
+                    else
+                        failCount = failCount + 1
+                        connected = false
+                        setStatus("Reconnecting (" .. failCount .. ")", THEME.RedSoft)
+                        if failCount >= 5 then
+                            task.wait(2)
+                        end
+                    end
+                end
+            end)
+
+            -- ============================================================================
+            -- DRAGGABLE (leak-free)
+            -- ============================================================================
+            local function makeDraggable(obj, handle, others)
+                local dragging, inputStart, startPos = false, nil, nil
+
+                handle.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1
+                    or input.UserInputType == Enum.UserInputType.Touch then
+                        dragging = true
+                        inputStart = input.Position
+                        startPos = obj.Position
+                    end
+                end)
+
+                UserInputService.InputChanged:Connect(function(input)
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                        return
+                    end
+                    if not dragging then return end
+                    if input.UserInputType ~= Enum.UserInputType.MouseMovement
+                    and input.UserInputType ~= Enum.UserInputType.Touch then return end
+
+                    local delta = input.Position - inputStart
+                    local newPos = UDim2.new(
+                        startPos.X.Scale, startPos.X.Offset + delta.X,
+                        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                    )
+                    obj.Position = newPos
+                    if others then
+                        for _, o in ipairs(others) do
+                            o.obj.Position = UDim2.new(
+                                newPos.X.Scale, newPos.X.Offset + o.offX,
+                                newPos.Y.Scale, newPos.Y.Offset + o.offY
+                            )
+                        end
+                    end
+                end)
+            end
+
+            makeDraggable(MainFrame, DragHandle, {
+                {obj = DiscordButton, offX = 0, offY = GUI_HEIGHT},
+            })
+            makeDraggable(ToggleFrame, ToggleBtn)
+
+            print("[Afg Joiner] Loaded! (NO LAG - OPTIMIZED)")
+            print("[Afg Joiner] Mode: " .. (isMobile and "MOBILE" or "PC"))
+            print("[Afg Joiner] Polling: " .. POLL_INTERVAL .. "s | Min: " .. formatNumber(MIN_VAL))
+            print("[Afg Joiner] Auto-Join Delay: " .. AJ_DELAY .. "s")
+        end)
+
+        if success then
+            break
+        end
+
+        warn("[Afg Joiner] Load failed (attempt " .. attempt .. "):", err)
+        if attempt >= 5 then
+            warn("[Afg Joiner] Giving up after 5 attempts.")
+            break
+        end
+        task.wait(2)
+    end
+end
+
+safeLoad()
+    end)
+    if not ok then
+        warn("[Combined] Afg Joiner stopped:", tostring(err))
+    end
+end)
+
+print("[Combined] Intro complete. Dex Finder and Afg Joiner launched.")
