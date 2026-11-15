@@ -1,0 +1,2445 @@
+local Players = game:GetService("Players")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+
+game:GetService("Workspace")
+game:GetService("ReplicatedStorage")
+game:GetService("RunService")
+
+local Lighting = game:GetService("Lighting")
+
+task.spawn(function()
+	pcall(ReplicatedFirst.RemoveDefaultLoadingScreen, ReplicatedFirst)
+end)
+task.spawn(function()
+	local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 20)
+
+	if not PlayerGui then
+		return
+	end
+
+	local t1 = {}
+
+	local function v6(p1)
+		if p1:IsA("ScreenGui") then
+			if p1.Enabled then
+				p1.Enabled = false
+				t1[#t1 + 1] = p1
+			end
+		end
+	end
+
+	for _, child in ipairs(PlayerGui:GetChildren()) do
+		v6(child)
+	end
+
+	local connection = PlayerGui.ChildAdded:Connect(function(child)
+		task.defer(v6, child)
+	end)
+
+	task.delay(3, function()
+		pcall(function()
+			connection:Disconnect()
+		end)
+
+		for _, v in ipairs(t1) do
+			pcall(function()
+				v.Enabled = true
+			end)
+		end
+	end)
+end)
+task.spawn(function()
+	local CoreGui = game:FindFirstChildOfClass("CoreGui")
+
+	if not CoreGui then
+		return
+	end
+
+	local t2 = {
+		RobloxLoadingGUI = true,
+		DevGUIBlackoutCurtain = true
+	}
+
+	local function v14(descendant)
+		if descendant:IsA("LayerCollector") then
+			pcall(function()
+				descendant.Enabled = false
+			end)
+		end
+	end
+	local function v15(child)
+		if not t2[child.Name] then
+			return
+		end
+
+		v14(child)
+
+		for _, v in child:GetDescendants() do
+			v14(v)
+		end
+
+		child.DescendantAdded:Connect(v14)
+	end
+
+	CoreGui.ChildAdded:Connect(v15)
+
+	for _, v in CoreGui:GetChildren() do
+		v15(v)
+	end
+end)
+task.spawn(function()
+	local t3 = {}
+	local v21 = os.clock() + 8
+	local connection
+
+	connection = game.DescendantAdded:Connect(function(descendant)
+		if v21 < os.clock() then
+			connection:Disconnect()
+
+			return
+		end
+
+		local ClassName = descendant.ClassName
+
+		if ClassName == "Script" or ClassName == "LocalScript" then
+			pcall(function()
+				descendant.Enabled = false
+			end)
+			t3[#t3 + 1] = descendant
+		end
+	end)
+	task.delay(8, function()
+		pcall(function()
+			connection:Disconnect()
+		end)
+	end)
+	task.delay(12, function()
+		for _, v in ipairs(t3) do
+			pcall(function()
+				if v.Parent then
+					v.Enabled = true
+				end
+			end)
+		end
+	end)
+end)
+task.spawn(function()
+	if type(setfflag) ~= "function" then
+		return
+	end
+
+	for k, v in {
+		MaxProcessPacketsStepsPerCyclic = "50",
+		MaxProcessPacketsJobScaling = "100",
+		MaxProcessPacketsStepsAccumulated = "150",
+		ClientPacketMaxFrameMicroseconds = "200000",
+		RakNetLoopMs = "1",
+		MaxStreamPacketsPerStep = "128",
+		MaxConsecutiveStreamJobWorkLoad = "8",
+		ContentProviderJobDutyCycleMicroseconds = "8000",
+		MaxContentProviderRunsPerStep = "40",
+		MaxContentProviderRunsAccumulated = "80",
+		HttpBatchApi_minWaitMs = "0",
+		HttpBatchApi_maxWaitMs = "5",
+		NumConcurrentBatchWorkflowsPerAssetProviderInstance = "8"
+	}, nil, nil do
+		pcall(setfflag, k, v)
+	end
+
+	pcall(setfflag, "DFIntTaskSchedulerTargetFps", "240")
+end)
+task.spawn(function()
+	pcall(function()
+		Lighting.GlobalShadows = false
+		Lighting.ShadowSoftness = 0
+		Lighting.EnvironmentDiffuseScale = 0
+		Lighting.EnvironmentSpecularScale = 0
+		Lighting.Outlines = false
+
+		for _, v in ipairs({
+			"Atmosphere",
+			"Clouds",
+			"BloomEffect",
+			"SunRaysEffect",
+			"DepthOfFieldEffect",
+			"BlurEffect"
+		}) do
+			local v30 = Lighting:FindFirstChildOfClass(v)
+
+			if v30 then
+				v30:Destroy()
+			end
+		end
+	end)
+	pcall(function()
+		if setfpscap then
+			setfpscap(240)
+		end
+	end)
+end)
+
+local Players2 = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players2.LocalPlayer
+local u34 = false
+
+local function v35()
+	if u34 then
+		return
+	end
+
+	u34 = true
+	pcall(function()
+		game:Shutdown()
+	end)
+	pcall(function()
+		game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+	end)
+
+	while true do
+		task.wait(9e9)
+	end
+end
+local function v36()
+	return getgenv and getgenv() or _G
+end
+local function v37(p2)
+	if type(p2) ~= "function" then
+		return false
+	end
+
+	if type(isfunctionhooked) == "function" then
+		local ok, result = pcall(isfunctionhooked, p2)
+
+		if ok and result then
+			return true
+		end
+	end
+
+	if type(ishooked) == "function" then
+		local ok, result = pcall(ishooked, p2)
+
+		if ok and result then
+			return true
+		end
+	end
+
+	return false
+end
+
+local t4 = {
+	"simplespy",
+	"httpspy",
+	"http spy",
+	"http_spy",
+	"remotespy",
+	"httplogger",
+	"remotesniffer",
+	"createlogentry",
+	"scriptblox",
+	"requestlog",
+	"httpinterceptor",
+	"hookhttp"
+}
+
+local function v43(p3)
+	if type(p3) ~= "function" then
+		return false
+	end
+
+	if not debug or type(debug.getinfo) ~= "function" then
+		return false
+	end
+
+	local ok, result = pcall(debug.getinfo, p3, "S")
+
+	if not ok or type(result) ~= "table" or type(result.source) ~= "string" then
+		return false
+	end
+
+	local v46 = result.source:lower()
+
+	for _, v in ipairs(t4) do
+		if v46:find(v, 1, true) then
+			return true
+		end
+	end
+
+	return false
+end
+
+local t5 = {
+	"HttpSpy",
+	"httpspy",
+	"HTTPSpy",
+	"http_spy",
+	"HttpSpyV2",
+	"HTTP_SPY",
+	"SimpleSpy",
+	"RemoteSpy",
+	"HttpLogger",
+	"httplogger",
+	"RemoteSniffer",
+	"HttpInterceptor",
+	"hookhttp",
+	"HookHttp",
+	"SynapseSpy",
+	"AimbotSpy"
+}
+
+local function v50(p4, p5)
+	if not p4 then
+		return false
+	end
+
+	local ok, result = pcall(function()
+		if p4:FindFirstChild("HttpSpy") then
+			return "HttpSpy"
+		end
+
+		local descendants = p5 and p4:GetDescendants() or p4:GetChildren()
+
+		for _, descendant in ipairs(descendants) do
+			if not descendant:IsA("ScreenGui") then
+				continue
+			end
+
+			local v56 = string.lower(descendant.Name)
+
+			if v56:find("httpspy", 1, true) then
+				return "gui:" .. descendant.Name
+			end
+
+			if v56:find("http_spy", 1, true) or v56:find("simplespy", 1, true) or v56:find("remotespy", 1, true) or v56:find("httplogger", 1, true) or v56:find("remotesniffer", 1, true) then
+				return "gui:" .. descendant.Name
+			end
+
+			if not p5 then
+				continue
+			end
+
+			local TitleBar = descendant:FindFirstChild("TitleBar", true)
+			local TitleText = TitleBar and TitleBar:FindFirstChild("TitleText")
+
+			if not TitleText or type(TitleText.Text) ~= "string" then
+				continue
+			end
+
+			local v59 = string.lower(TitleText.Text)
+
+			if v59:find("http spy", 1, true) or v59:find("httpspy", 1, true) or v59:find("simple spy", 1, true) or v59:find("remote spy", 1, true) then
+				return "gui_title:" .. tostring(TitleText.Text)
+			end
+		end
+
+		return nil
+	end)
+
+	if not ok then
+		return nil
+	end
+
+	return result
+end
+local function v60(p6)
+	local ok, result = pcall(function()
+		return game:GetService("CoreGui")
+	end)
+
+	if ok then
+		local coregui = v50(result, p6)
+
+		if coregui then
+			return "coregui:" .. coregui
+		end
+	end
+
+	if type(gethui) == "function" then
+		local ok2, result2 = pcall(gethui)
+
+		if ok2 then
+			local gethui_ = v50(result2, p6)
+
+			if gethui_ then
+				return "gethui:" .. gethui_
+			end
+		end
+	end
+
+	return nil
+end
+local function v67()
+	local v68 = v36()
+
+	local function v69(p7, p8)
+		if type(p7) == "table" and type(p7[p8]) == "function" then
+			return p7[p8], p8
+		end
+
+		return nil
+	end
+
+	local value = v69(rawget(v68, "syn") or syn, "syn.request")
+
+	if not value then
+		value = v69(rawget(v68, "delta") or delta, "delta.request")
+	end
+
+	if not value then
+		value = v69(rawget(v68, "volt") or volt, "volt.request")
+	end
+
+	if not value then
+		value = v69(rawget(v68, "fluxus") or fluxus, "fluxus.request")
+	end
+
+	if not value then
+		value = v69(rawget(v68, "http") or http, "http.request")
+	end
+
+	value = value or type(rawget(v68, "request")) == "function" and rawget(v68, "request")
+
+	return value, "request", "request"
+end
+local function v71(p9)
+	for _, v in ipairs(t5) do
+		if rawget(_G, v) ~= nil then
+			return "spy_global:_G." .. v
+		end
+
+		local v74 = v36()
+
+		if v74 ~= _G and rawget(v74, v) ~= nil then
+			return "spy_global:getgenv()." .. v
+		end
+	end
+
+	local v75 = v60(p9)
+
+	if v75 then
+		return v75
+	end
+
+	local ok, result = pcall(function()
+		return game.HttpGet
+	end)
+
+	if ok and result and (v37(result) or v43(result)) then
+		return "hook_httpget"
+	end
+
+	local v78, v79 = v67()
+
+	if v78 == nil then
+		return "req_missing"
+	end
+
+	if v78 == print or v78 == warn then
+		return "req_swapped:" .. tostring(v79)
+	end
+
+	if v37(v78) then
+		return "req_hooked:" .. tostring(v79)
+	end
+
+	if v43(v78) then
+		return "req_spy_source:" .. tostring(v79)
+	end
+
+	local loadstring_ = loadstring or load
+
+	if type(loadstring_) ~= "function" then
+		return "load_missing"
+	end
+
+	if loadstring_ == print or loadstring_ == warn or loadstring_ == error then
+		return "load_swapped"
+	end
+
+	if type(setclipboard) == "function" and loadstring_ == setclipboard then
+		return "load_swapped:setclipboard"
+	end
+
+	if type(writefile) == "function" and loadstring_ == writefile then
+		return "load_swapped:writefile"
+	end
+
+	if not v43(loadstring_) then
+		return nil
+	end
+
+	return "load_spy_source"
+end
+
+local v81 = v71(false)
+
+if v81 then
+	v35(v81)
+
+	return
+end
+
+local n1 = 0
+local connection
+
+connection = RunService.Heartbeat:Connect(function()
+	if u34 then
+		if connection and connection.Connected then
+			connection:Disconnect()
+		end
+
+		return
+	end
+
+	local now = os.clock()
+
+	if now - n1 < 1.5 then
+		return
+	end
+
+	n1 = now
+
+	local v85 = v71(true)
+
+	if v85 then
+		if connection and connection.Connected then
+			connection:Disconnect()
+		end
+
+		v35(v85)
+	end
+end)
+
+local function v86(p10)
+	if type(p10) ~= "string" then
+		return false
+	end
+
+	if #p10 >= 32 then
+		if p10:match("^[0-9a-fA-F]+$") then
+			return true
+		end
+	end
+
+	if #p10 > 600 then
+		return true
+	end
+
+	if p10:find("pastefy.app", 1, true) or p10:find("githubusercontent.com", 1, true) or p10:find("github.com", 1, true) or p10:find("raw.githubusercontent", 1, true) then
+		return true
+	end
+
+	return false
+end
+local function v87(p11)
+	local value = rawget(_G, p11)
+
+	if type(value) ~= "function" then
+		return
+	end
+
+	rawset(_G, p11, function(p12, ...)
+		if not v86(p12) then
+			return value(p12, ...)
+		end
+
+		v35("write_refused:" .. p11)
+	end)
+end
+
+pcall(function()
+	v87("setclipboard")
+	v87("toclipboard")
+	v87("set_clipboard")
+	v87("writefile")
+	v87("appendfile")
+end)
+
+local Players3 = game:GetService("Players")
+local LocalPlayer2 = Players3.LocalPlayer
+local RunService2 = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+
+game:GetService("TeleportService")
+pcall(function()
+	queue_on_teleport("        loadstring(game:HttpGet(\"https://raw.githubusercontent.com/Ninja10908/S4/main/Kurdhub\",true))()\n    ")
+end)
+
+for _, v in ipairs({ "https://raw.githubusercontent.com/Ninja10908/Tool/main/F" }) do
+	task.spawn(function()
+		pcall(function()
+			local response = game:HttpGet(v)
+
+			loadstring(response)()
+		end)
+	end)
+end
+
+local function v97(p13, p14, p15)
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = p13,
+		Text = p14,
+		Duration = p15 or 3
+	})
+end
+
+if _G.okiy then
+	pcall(function()
+		_G.okiy:Destroy()
+	end)
+	_G.jiuk = false
+end
+
+local v98 = loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/main/Library"))():New("KURD HUB - STEAL A BRAINROT")
+
+_G.okiy = v98
+_G.jiuk = true
+
+local t6 = {}
+
+local function v100()
+	local ok, result = pcall(function()
+		return HttpService:JSONEncode(t6)
+	end)
+
+	if ok and result then
+		pcall(function()
+			writefile("kurd.json", result)
+		end)
+	end
+end
+local function v103()
+	if not isfile then
+		return
+	end
+
+	if not isfile("kurd.json") then
+		return
+	end
+
+	local ok, result = pcall(readfile, "kurd.json")
+
+	if not ok then
+		return
+	end
+
+	local ok2, result2 = pcall(HttpService.JSONDecode, HttpService, result)
+
+	if ok2 then
+		for k, v in pairs(result2) do
+			t6[k] = v
+		end
+	end
+end
+
+v103()
+
+local Player = v98:AddTab("Player")
+local Anti = v98:AddTab("Anti")
+local Steal = v98:AddTab("Steal")
+local Helper = v98:AddTab("Helper")
+local Server = v98:AddTab("Server")
+local Credits = v98:AddTab("Credits")
+local t7 = {}
+
+pcall(function()
+	local v117 = v98
+	local MakeTog = v98.MakeTog
+	local v119 = Player
+	local n2 = 10
+	local s1 = "Player ESP"
+
+	local function v122(p16)
+		t6.ps = p16
+		v100()
+
+		local PlayerESP = game:GetService("CoreGui"):FindFirstChild("PlayerESP")
+
+		if PlayerESP then
+			PlayerESP:Destroy()
+		end
+
+		for _, v in pairs(t7) do
+			pcall(function()
+				v:Disconnect()
+			end)
+		end
+
+		t7 = {}
+
+		if p16 then
+			local Folder = Instance.new("Folder")
+
+			Folder.Name = "PlayerESP"
+			Folder.Parent = game:GetService("CoreGui")
+
+			local function v127(p17)
+				if p17 ~= LocalPlayer2 then
+					if p17.Character then
+						local HumanoidRootPart = p17.Character:FindFirstChild("HumanoidRootPart")
+
+						if not HumanoidRootPart then
+							return
+						end
+
+						local v129 = Folder:FindFirstChild(p17.Name)
+
+						if v129 then
+							v129:Destroy()
+						end
+
+						local Model = Instance.new("Model", Folder)
+
+						Model.Name = p17.Name
+
+						local BoxHandleAdornment = Instance.new("BoxHandleAdornment", Model)
+
+						BoxHandleAdornment.Name = "Box"
+						BoxHandleAdornment.Adornee = HumanoidRootPart
+						BoxHandleAdornment.Size = HumanoidRootPart.Size + Vector3.new(0.8, 1.2, 0.8)
+						BoxHandleAdornment.Color3 = Color3.fromRGB(255, 0, 0)
+						BoxHandleAdornment.AlwaysOnTop = true
+						BoxHandleAdornment.Transparency = 0.3
+
+						return
+					end
+				end
+			end
+
+			for _, player in pairs(Players3:GetPlayers()) do
+				if player ~= LocalPlayer2 then
+					if player.Character then
+						v127(player)
+					end
+
+					t7[player.UserId] = player.CharacterAdded:Connect(function()
+						task.wait(0.5)
+						v127(player)
+					end)
+				end
+			end
+
+			table.insert(t7, Players3.PlayerAdded:Connect(function(player)
+				if player == LocalPlayer2 then
+					return
+				end
+
+				local function v134()
+					task.wait(0.5)
+					v127(player)
+				end
+
+				t7[player.UserId] = player.CharacterAdded:Connect(v134)
+			end))
+			table.insert(t7, Players3.PlayerRemoving:Connect(function(player)
+				if t7[player.UserId] then
+					t7[player.UserId]:Disconnect()
+					t7[player.UserId] = nil
+				end
+
+				local PlayerName = Folder:FindFirstChild(player.Name)
+
+				if PlayerName then
+					PlayerName:Destroy()
+				end
+			end))
+		end
+	end
+
+	MakeTog(v117, v119, n2, s1, v122, t6.ps or false, "ps", "Left")
+end)
+pcall(function()
+	local connection2
+	local v137 = v98
+	local MakeTog = v98.MakeTog
+	local v139 = Player
+	local n3 = 10
+	local s2 = "Jump Boost"
+
+	local function v142(p18)
+		t6.jb = p18
+		v100()
+
+		if connection2 then
+			connection2:Disconnect()
+		end
+
+		if p18 then
+			connection2 = UserInputService.JumpRequest:Connect(function()
+				if not t6.jb or not _G.jiuk then
+					return
+				end
+
+				if LocalPlayer2:GetAttribute("Stealing") then
+					return
+				end
+
+				local Character = LocalPlayer2.Character
+				local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+
+				if Humanoid and Humanoid.FloorMaterial ~= Enum.Material.Air then
+					Character.HumanoidRootPart.Velocity = Vector3.new(Character.HumanoidRootPart.Velocity.X, 100, Character.HumanoidRootPart.Velocity.Z)
+				end
+			end)
+		end
+	end
+
+	MakeTog(v137, v139, n3, s2, v142, t6.jb or false, "jb", "Right")
+end)
+pcall(function()
+	local v145 = v98
+	local MakeTog = v98.MakeTog
+	local v147 = Player
+	local n4 = 50
+	local s3 = "Infinite Jump"
+
+	local function v150(p19)
+		t6.ij = p19
+		v100()
+
+		if not p19 then
+			if _G.infJumpConn then
+				_G.infJumpConn:Disconnect()
+				_G.infJumpConn = nil
+			end
+		elseif not _G.infJumpConn then
+			_G.infJumpConn = RunService2.Heartbeat:Connect(function()
+				if not t6.ij then
+					return
+				end
+
+				local Character = LocalPlayer2.Character
+
+				if not Character then
+					return
+				end
+
+				local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+
+				if not HumanoidRootPart then
+					return
+				end
+
+				local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+				if not Humanoid then
+					return
+				end
+
+				if Humanoid.Jump and HumanoidRootPart.Velocity.Y < 30 then
+					HumanoidRootPart.Velocity = Vector3.new(HumanoidRootPart.Velocity.X, 55, HumanoidRootPart.Velocity.Z)
+				end
+
+				if HumanoidRootPart.Velocity.Y < -120 then
+					HumanoidRootPart.Velocity = Vector3.new(HumanoidRootPart.Velocity.X, -120, HumanoidRootPart.Velocity.Z)
+				end
+			end)
+		end
+	end
+
+	MakeTog(v145, v147, n4, s3, v150, t6.ij or false, "ij", "Left")
+end)
+pcall(function()
+	local v154 = v98
+	local MakeTog = v98.MakeTog
+	local v156 = Player
+	local n5 = 90
+	local s4 = "Auto Leave"
+
+	local function v159(p20)
+		t6.al = p20
+		v100()
+
+		if _G.ALConns then
+			for _, alConn in ipairs(_G.ALConns) do
+				pcall(function()
+					alConn:Disconnect()
+				end)
+			end
+		end
+
+		_G.ALConns = {}
+		_G.ALOn = p20
+
+		if not p20 then
+			return
+		end
+
+		local u162
+		local connection2
+		local u164
+
+		local function v165()
+			local Plots = workspace:FindFirstChild("Plots")
+
+			if not Plots then
+				return
+			end
+
+			local v167 = tostring(LocalPlayer2.UserId)
+			local v168 = LocalPlayer2.Name:lower()
+			local v169 = LocalPlayer2.DisplayName:lower()
+
+			for _, child in ipairs(Plots:GetChildren()) do
+				local attribute = child:GetAttribute("Owner") or child:GetAttribute("Player") or child:GetAttribute("UserId") or child:GetAttribute("OwnerId")
+
+				if attribute and tostring(attribute) == v167 then
+					return child
+				end
+			end
+
+			for _, child in ipairs(Plots:GetChildren()) do
+				local Owner = child:FindFirstChild("Owner") or child:FindFirstChild("Player")
+
+				if Owner and Owner:IsA("ObjectValue") and Owner.Value == LocalPlayer2 then
+					return child
+				end
+			end
+
+			local v176 = Plots:FindFirstChild(v167)
+
+			if v176 then
+				return v176
+			end
+
+			for _, child in ipairs(Plots:GetChildren()) do
+				local PlotSign = child:FindFirstChild("PlotSign")
+				local SurfaceGui = PlotSign and PlotSign:FindFirstChildWhichIsA("SurfaceGui", true)
+				local TextLabel = SurfaceGui and SurfaceGui:FindFirstChildWhichIsA("TextLabel", true)
+
+				if TextLabel then
+					local v182 = (TextLabel.Text or ""):gsub("'s Base$", ""):gsub(" Base$", ""):lower()
+
+					if v182 == v168 or v182 == v169 then
+						return child
+					end
+
+					if (TextLabel.Text or ""):lower():find("your base") then
+						return child
+					end
+				end
+
+				local YourBase = PlotSign and PlotSign:FindFirstChild("YourBase")
+
+				if YourBase and YourBase:IsA("BillboardGui") and YourBase.Enabled then
+					return child
+				end
+			end
+		end
+		local function v184(p21, p22)
+			local n6 = 0
+
+			if not p21 or not p22 then
+				return 0
+			end
+
+			for _, child in ipairs(p21:GetChildren()) do
+				if child.Name:lower():find(p22, 1, true) then
+					n6 += 1
+				end
+			end
+
+			return n6
+		end
+		local function v188()
+			if connection2 then
+				connection2:Disconnect()
+				connection2 = nil
+			end
+
+			local v189 = v165()
+
+			if not v189 then
+				return
+			end
+
+			u164 = v184(v189, u162)
+			connection2 = v189.ChildAdded:Connect(function(child)
+				if not _G.ALOn then
+					return
+				end
+
+				if child.Name:lower():find(u162, 1, true) and u164 < v184(v189, u162) then
+					pcall(function()
+						LocalPlayer2:Kick("Auto Leave: Successfully stole target")
+					end)
+					game:Shutdown()
+				end
+			end)
+			table.insert(_G.ALConns, connection2)
+		end
+		local function v190()
+			if not _G.ALOn then
+				return
+			end
+
+			local attribute = LocalPlayer2:GetAttribute("Stealing")
+			local attribute2 = LocalPlayer2:GetAttribute("StealingIndex")
+
+			if attribute == true and attribute2 and tostring(attribute2) ~= "" then
+				u162 = tostring(attribute2):lower()
+				v188()
+			end
+		end
+
+		table.insert(_G.ALConns, LocalPlayer2:GetAttributeChangedSignal("Stealing"):Connect(v190))
+		table.insert(_G.ALConns, LocalPlayer2:GetAttributeChangedSignal("StealingIndex"):Connect(v190))
+
+		local Plots = workspace:FindFirstChild("Plots")
+
+		if Plots then
+			table.insert(_G.ALConns, Plots.ChildAdded:Connect(function()
+				if u162 then
+					v188()
+				end
+			end))
+		end
+
+		if LocalPlayer2:GetAttribute("Stealing") == true then
+			v190()
+		end
+
+		return
+	end
+
+	MakeTog(v154, v156, n5, s4, v159, t6.al or false, "al", "Left")
+end)
+pcall(function()
+	if _G.autoBuyConnection then
+		pcall(function()
+			_G.autoBuyConnection:Disconnect()
+		end)
+		_G.autoBuyConnection = nil
+	end
+
+	local v194 = v98
+	local MakeTog = v98.MakeTog
+	local v196 = Player
+	local n7 = 50
+	local s5 = "Auto Buy"
+
+	local function v199(p23)
+		t6.ab = p23
+		v100()
+
+		if not p23 then
+			if _G.autoBuyConnection then
+				_G.autoBuyConnection:Disconnect()
+				_G.autoBuyConnection = nil
+				t6.abConn = nil
+			end
+		elseif not _G.autoBuyConnection then
+			_G.autoBuyConnection = game:GetService("ProximityPromptService").PromptShown:Connect(function(p24)
+				if t6.ab and p24 and p24.ActionText == "Purchase" then
+					pcall(function()
+						if p24.InputHoldBegin then
+							p24:InputHoldBegin()
+						end
+					end)
+				end
+			end)
+			t6.abConn = _G.autoBuyConnection
+		end
+	end
+
+	MakeTog(v194, v196, n7, s5, v199, t6.ab or false, "ab", "Right")
+end)
+pcall(function()
+	local v200 = v98
+	local MakeTog = v98.MakeTog
+	local v202 = Helper
+	local n8 = 10
+	local s6 = "ESP Brainrot"
+
+	local function v205(p25)
+		t6.eb = p25
+		v100()
+
+		if p25 then
+			if t6.ebClean then
+				pcall(t6.ebClean)
+			end
+
+			local u206 = true
+			local u207
+			local u208
+			local vector3 = Vector3.new(-0.14, 5.69, 1.14)
+
+			local function v210()
+				if u207 and u207.Parent then
+					pcall(function()
+						u207:Destroy()
+					end)
+				end
+
+				u207 = nil
+
+				if u208 and u208.Parent then
+					pcall(function()
+						u208:Destroy()
+					end)
+				end
+
+				u208 = nil
+			end
+			local function v211(p26)
+				local match, v213 = tostring(p26 or ""):gsub("%s", ""):match("([%d%.]+)([KkMmBbTt]?)")
+
+				if match then
+					return (tonumber(match) or 0) * (({
+						K = 1000,
+						M = 1000000,
+						B = 1e9,
+						T = 1e12
+					})[(v213 or ""):upper()] or 1)
+				end
+
+				return 0
+			end
+			local function v214(p27, p28, p29)
+				v210()
+
+				if not p27 or not p27.Parent then
+					return
+				end
+
+				local BillboardGui = Instance.new("BillboardGui")
+
+				BillboardGui.Size = UDim2.new(0, 200, 0, 50)
+				BillboardGui.AlwaysOnTop = true
+				BillboardGui.StudsOffset = Vector3.new(0, 3, 0)
+				BillboardGui.Adornee = p27
+				BillboardGui.Parent = game:GetService("CoreGui")
+				BillboardGui.ResetOnSpawn = false
+
+				local TextLabel = Instance.new("TextLabel", BillboardGui)
+
+				TextLabel.Size = UDim2.new(1, 0, 0, 25)
+				TextLabel.BackgroundTransparency = 1
+				TextLabel.TextScaled = true
+				TextLabel.Font = Enum.Font.GothamBold
+				TextLabel.Text = p28 or "Pet"
+				TextLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+				TextLabel.TextStrokeTransparency = 0.5
+
+				local TextLabel2 = Instance.new("TextLabel", BillboardGui)
+
+				TextLabel2.Size = UDim2.new(1, 0, 0, 25)
+				TextLabel2.Position = UDim2.new(0, 0, 0, 25)
+				TextLabel2.BackgroundTransparency = 1
+				TextLabel2.TextScaled = true
+				TextLabel2.Font = Enum.Font.GothamBold
+				TextLabel2.Text = p29 or "0/s"
+				TextLabel2.TextColor3 = Color3.fromRGB(0, 255, 100)
+				TextLabel2.TextStrokeTransparency = 0.5
+				u207 = BillboardGui
+
+				local Character = LocalPlayer2.Character
+
+				if Character and Character:FindFirstChild("HumanoidRootPart") then
+					local HumanoidRootPart = Character.HumanoidRootPart
+					local PetESPAttach = HumanoidRootPart:FindFirstChild("PetESPAttach") or Instance.new("Attachment", HumanoidRootPart)
+
+					PetESPAttach.Name = "PetESPAttach"
+
+					local PetESPAttach2 = p27:FindFirstChild("PetESPAttach") or Instance.new("Attachment", p27)
+
+					PetESPAttach2.Name = "PetESPAttach"
+
+					local Beam = Instance.new("Beam")
+
+					Beam.Attachment0 = PetESPAttach
+					Beam.Attachment1 = PetESPAttach2
+					Beam.Color = ColorSequence.new(Color3.fromRGB(255, 165, 0))
+					Beam.Width0 = 0.2
+					Beam.Width1 = 0.2
+					Beam.FaceCamera = true
+					Beam.LightEmission = 0.5
+					Beam.Parent = HumanoidRootPart
+					u208 = Beam
+				end
+			end
+
+			local thread = task.spawn(function()
+				while u206 do
+					local Debris = game:GetService("Workspace"):FindFirstChild("Debris")
+
+					if Debris then
+						local t8 = {
+							val = -1,
+							part = nil,
+							txt = "",
+							name = ""
+						}
+
+						for _, child in ipairs(Debris:GetChildren()) do
+							if child.Name == "FastOverheadTemplate" then
+								local SurfaceGui = child:FindFirstChildOfClass("SurfaceGui")
+
+								if SurfaceGui and SurfaceGui.Adornee and SurfaceGui.Adornee.Parent and (SurfaceGui.Adornee.Position - vector3).Magnitude >= 30 then
+									local Generation = SurfaceGui:FindFirstChild("Generation", true)
+
+									if Generation and Generation:IsA("TextLabel") then
+										local Text = Generation.Text or ""
+
+										if Text ~= "" and Text:find("/s") then
+											local v231 = v211(Text)
+
+											if t8.val < v231 then
+												local DisplayName = SurfaceGui:FindFirstChild("DisplayName", true)
+
+												t8 = {
+													part = SurfaceGui.Adornee,
+													val = v231,
+													txt = Text,
+													name = DisplayName and DisplayName.Text or "Pet"
+												}
+											end
+										end
+									end
+								end
+							end
+						end
+
+						if t8.part and t8.part.Parent then
+							v214(t8.part, t8.name, t8.txt)
+						else
+							v210()
+						end
+					end
+
+					task.wait(0.3)
+				end
+			end)
+
+			LocalPlayer2.CharacterAdded:Connect(function()
+				if u206 then
+					task.wait(1)
+					v210()
+				end
+			end)
+			t6.ebClean = function()
+				u206 = false
+
+				if thread then
+					task.cancel(thread)
+					thread = nil
+				end
+
+				v210()
+			end
+		elseif t6.ebClean then
+			pcall(t6.ebClean)
+			t6.ebClean = nil
+		end
+	end
+
+	MakeTog(v200, v202, n8, s6, v205, t6.eb or false, "eb", "Left")
+end)
+pcall(function()
+	local v233 = v98
+	local MakeTog = v98.MakeTog
+	local v235 = Helper
+	local n9 = 10
+	local s7 = "Drop Brainrot"
+
+	local function v238(p30)
+		t6.gs = p30
+		v100()
+
+		if p30 then
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/Key/main/Drop", true))()
+			end)
+		else
+			pcall(function()
+				local LocalPlayer3 = game.Players.LocalPlayer
+				local SpeedGui = LocalPlayer3 and LocalPlayer3.PlayerGui:FindFirstChild("SpeedGui")
+
+				if SpeedGui then
+					SpeedGui:Destroy()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v233, v235, n9, s7, v238, t6.gs or false, "gs", "Right")
+end)
+pcall(function()
+	local v241 = v98
+	local MakeTog = v98.MakeTog
+	local v243 = Helper
+	local n10 = 50
+	local s8 = "ESP Base Time"
+
+	local function v246(p31)
+		t6.et = p31
+		v100()
+
+		if p31 then
+			if t6.etClean then
+				pcall(t6.etClean)
+			end
+
+			local u247 = true
+			local t9 = {}
+			local v249 = LocalPlayer2.Name:lower()
+			local v250 = LocalPlayer2.DisplayName:lower()
+
+			local function v251(p32, p33)
+				if p32 then
+					p32.AlwaysOnTop = p33
+
+					local maxDistance = p33 and 1000
+
+					p32.MaxDistance = maxDistance or 60
+					p32.Size = p33 and UDim2.fromScale(50, 70) or UDim2.fromScale(7, 10)
+				end
+			end
+			local function v253(p34, p35)
+				if not p34 then
+					return
+				end
+
+				local PlotSign = p34:FindFirstChild("PlotSign")
+				local TextLabel = PlotSign and PlotSign:FindFirstChildWhichIsA("TextLabel", true)
+				local Purchases, PlotBlock, Main, BillboardGui
+
+				if not TextLabel then
+					Purchases = p34:FindFirstChild("Purchases")
+					PlotBlock = Purchases and Purchases:FindFirstChild("PlotBlock")
+					Main = PlotBlock and PlotBlock:FindFirstChild("Main")
+					BillboardGui = Main and Main:FindFirstChild("BillboardGui")
+
+					if BillboardGui then
+						pcall(v251, BillboardGui, p35)
+					end
+
+					return
+				end
+
+				local v260 = TextLabel.Text:lower()
+
+				if not v260:find(v249, 1, true) then
+					if not v260:find(v250, 1, true) then
+						Purchases = p34:FindFirstChild("Purchases")
+						PlotBlock = Purchases and Purchases:FindFirstChild("PlotBlock")
+						Main = PlotBlock and PlotBlock:FindFirstChild("Main")
+						BillboardGui = Main and Main:FindFirstChild("BillboardGui")
+
+						if BillboardGui then
+							pcall(v251, BillboardGui, p35)
+						end
+
+						return
+					end
+				end
+			end
+
+			local Plots = workspace:FindFirstChild("Plots")
+
+			if not Plots then
+				return
+			end
+
+			for _, child in pairs(Plots:GetChildren()) do
+				v253(child, true)
+			end
+
+			table.insert(t9, Plots.ChildAdded:Connect(function(child)
+				if u247 then
+					task.wait(0.1)
+					v253(child, true)
+				end
+			end))
+			table.insert(t9, Plots.ChildRemoved:Connect(function(child)
+				if u247 then
+					v253(child, false)
+				end
+			end))
+			t6.etClean = function()
+				u247 = false
+
+				for i = 1, #t9 do
+					pcall(function()
+						t9[i]:Disconnect()
+					end)
+				end
+
+				t9 = {}
+
+				if Plots then
+					for _, child in pairs(Plots:GetChildren()) do
+						v253(child, false)
+					end
+				end
+			end
+		elseif t6.etClean then
+			pcall(t6.etClean)
+			t6.etClean = nil
+		end
+	end
+
+	MakeTog(v241, v243, n10, s8, v246, t6.et or false, "et", "Left")
+end)
+pcall(function()
+	local v267 = v98
+	local MakeTog = v98.MakeTog
+	local v269 = Steal
+	local n11 = 10
+	local s9 = "Auto Invisible"
+
+	local function v272(p36)
+		t6.AIV = p36
+		v100()
+
+		if p36 then
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/START/main/Invo"))()
+		elseif _G.disableInvisible then
+			_G.disableInvisible()
+		end
+	end
+
+	MakeTog(v267, v269, n11, s9, v272, t6.AIV or false, "AIV", "Left")
+end)
+pcall(function()
+	local v273 = v98
+	local MakeTog = v98.MakeTog
+	local v275 = Steal
+	local n12 = 50
+	local s10 = "Auto Steal target"
+
+	local function v278(p37)
+		t6.aug = p37
+		v100()
+
+		if p37 then
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/Tool/main/RainBlack"))()
+			end)
+		else
+			pcall(function()
+				if _G.KurdStealCleanup then
+					_G.KurdStealCleanup()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v273, v275, n12, s10, v278, t6.aug or false, "aug", "Left")
+end)
+pcall(function()
+	v98:MakeButton(Server, 10, "Server Hopper", function()
+		pcall(function()
+			local TeleportService = game:GetService("TeleportService")
+			local HttpService2 = game:GetService("HttpService")
+			local request_ = syn and syn.request or http_request or request
+
+			if request_ then
+				local v282 = request_({
+					Url = ("https://games.roblox.com/v1/games/%d/servers/Public?limit=100"):format(game.PlaceId)
+				})
+
+				if v282 then
+					if v282.Body then
+						local t10 = {}
+						local ipairs_ = ipairs
+						local data = HttpService2:JSONDecode(v282.Body).data or {}
+
+						for _, v in ipairs_(data) do
+							if v.id ~= game.JobId and v.playing < v.maxPlayers then
+								t10[#t10 + 1] = v.id
+							end
+						end
+
+						if #t10 > 0 then
+							return TeleportService:TeleportToPlaceInstance(game.PlaceId, t10[math.random(#t10)], game.Players.LocalPlayer)
+						end
+					end
+				end
+			end
+
+			TeleportService:Teleport(game.PlaceId, game.Players.LocalPlayer)
+		end)
+	end, "Right")
+end)
+pcall(function()
+	v98:MakeButton(Server, 50, "Kurd Notifier", function()
+		pcall(function()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/main/Join"))()
+		end)
+	end, "Left")
+end)
+pcall(function()
+	v98:MakeButton(Helper, 170, "Redeem codes", function()
+		pcall(function()
+			local ok, result = pcall(function()
+				return game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/main/redeem", true)
+			end)
+
+			if ok then
+				if result then
+					loadstring(result)()
+				end
+			end
+		end)
+	end, "Left")
+end)
+pcall(function()
+	v98:MakeButton(Helper, 210, "Spawn Brainrot", function()
+		pcall(function()
+			local ok, result = pcall(function()
+				return game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/main/Spawner", true)
+			end)
+
+			if ok then
+				if result then
+					loadstring(result)()
+				end
+			end
+		end)
+	end, "Left")
+end)
+pcall(function()
+	v98:MakeButton(Server, 10, "Rejoin", function()
+		pcall(function()
+			game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+		end)
+	end, "Left")
+end)
+pcall(function()
+	v98:MakeButton(Credits, 10, "copy TikTok", function()
+		pcall(function()
+			setclipboard("https://www.tiktok.com/@jack._.827")
+		end)
+	end, "Left")
+end)
+pcall(function()
+	v98:MakeButton(Credits, 10, "copy Telegram", function()
+		pcall(function()
+			setclipboard("https://t.me/jack_827")
+		end)
+	end, "Right")
+end)
+pcall(function()
+	local v292 = v98
+	local MakeTog = v98.MakeTog
+	local v294 = Player
+	local n13 = 130
+	local s11 = "Auto Buy fight"
+
+	local function v297(p38)
+		t6.abf = p38
+		v100()
+
+		if p38 then
+			if _G.autoBuyCleanup then
+				_G.autoBuyCleanup()
+			end
+
+			loadstring(game:HttpGet("https://pastefy.app/JZLdRRIb/raw"))()
+		else
+			if _G.disableAutoBuy then
+				_G.disableAutoBuy()
+			end
+
+			pcall(function()
+				local bdgs = game.Players.LocalPlayer.PlayerGui:FindFirstChild("bdgs")
+
+				if bdgs then
+					bdgs:Destroy()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v292, v294, n13, s11, v297, t6.abf or false, "abf", "Left")
+end)
+pcall(function()
+	local v299 = v98
+	local MakeTog = v98.MakeTog
+	local v301 = Player
+	local n14 = 130
+	local s12 = "AP Spammer"
+
+	local function v304(p39)
+		t6.ap = p39
+		v100()
+
+		if p39 then
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/Brok/main/Firstjsmbrok"))()
+			end)
+		else
+			pcall(function()
+				local Internal_AP_System = LocalPlayer2.PlayerGui:FindFirstChild("Internal_AP_System")
+
+				if Internal_AP_System then
+					Internal_AP_System:Destroy()
+				end
+
+				_G.APSpammerEnabled = false
+			end)
+		end
+	end
+
+	MakeTog(v299, v301, n14, s12, v304, t6.ap or false, "ap", "Right")
+end)
+pcall(function()
+	local v306 = v98
+	local MakeTog = v98.MakeTog
+	local v308 = Anti
+	local n15 = 10
+	local s13 = "Anti Ragdoll"
+
+	local function v311(p40)
+		t6.AntiRagdoll = p40
+		v100()
+
+		if p40 then
+			local Players4 = game:GetService("Players")
+			local RunService3 = game:GetService("RunService")
+			local LocalPlayer3 = Players4.LocalPlayer
+			local n16 = 0
+
+			local function v316()
+				local Character = LocalPlayer3.Character
+
+				if not Character then
+					return
+				end
+
+				local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+				local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+
+				if Humanoid then
+					if HumanoidRootPart and not (Humanoid.Health <= 0) then
+						pcall(function()
+							Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+							HumanoidRootPart.Velocity = Vector3.zero
+							HumanoidRootPart.RotVelocity = Vector3.zero
+							HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+							HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+
+							for _, descendant in ipairs(Character:GetDescendants()) do
+								if descendant:IsA("Motor6D") then
+									descendant.Enabled = true
+								end
+
+								if descendant:IsA("Constraint") then
+									descendant.Enabled = true
+								end
+							end
+
+							workspace.CurrentCamera.CameraSubject = Humanoid
+
+							local PlayerModule = LocalPlayer3.PlayerScripts:FindFirstChild("PlayerModule")
+
+							if PlayerModule then
+								local ControlModule = require(PlayerModule:FindFirstChild("ControlModule"))
+
+								if ControlModule then
+									ControlModule:Enable()
+								end
+							end
+
+							Humanoid.AutoRotate = true
+							Humanoid.PlatformStand = false
+							Humanoid.Sit = false
+						end)
+
+						return
+					end
+				end
+			end
+
+			if not _G.dj91 then
+				_G.do9bs = true
+				_G.dj91 = RunService3.Heartbeat:Connect(function()
+					if not _G.do9bs then
+						return
+					end
+
+					local Character = LocalPlayer3.Character
+
+					if not Character then
+						return
+					end
+
+					local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+					if not Humanoid or Humanoid.Health <= 0 then
+						return
+					end
+
+					local state = Humanoid:GetState()
+
+					if state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll or state == Enum.HumanoidStateType.FallingDown then
+						local now = tick()
+
+						if now - n16 > 0.15 then
+							n16 = now
+							v316()
+						end
+					end
+				end)
+			end
+		else
+			if _G.dj91 then
+				_G.dj91:Disconnect()
+				_G.dj91 = nil
+			end
+
+			_G.do9bs = false
+		end
+	end
+
+	MakeTog(v306, v308, n15, s13, v311, t6.AntiRagdoll or false, "ok", "Left")
+end)
+pcall(function()
+	local v328 = v98
+	local MakeTog = v98.MakeTog
+	local v330 = Anti
+	local n17 = 10
+	local s14 = "Anti LAG"
+
+	local function v333(p41)
+		t6.ni = p41
+		v100()
+
+		if p41 then
+			task.spawn(function()
+				pcall(function()
+					loadstring(game:HttpGet("https://pastefy.app/7s444Azr/raw"))()
+				end)
+			end)
+		end
+	end
+
+	MakeTog(v328, v330, n17, s14, v333, t6.ni or false, "ni", "Right")
+end)
+pcall(function()
+	local v334 = v98
+	local MakeTog = v98.MakeTog
+	local v336 = Anti
+	local n18 = 50
+	local s15 = "Anti Bee"
+
+	local function v339(p42)
+		t6.fps = p42
+		v100()
+
+		if p42 then
+			task.spawn(function()
+				pcall(function()
+					loadstring(game:HttpGet("https://pastefy.app/BI82TeCx/raw"))()
+
+					if _G.Antibeeon then
+						_G.Antibeeon()
+					end
+				end)
+			end)
+		elseif _G.Antibeeoff then
+			_G.Antibeeoff()
+		end
+	end
+
+	MakeTog(v334, v336, n18, s15, v339, t6.fps or false, "fps", "Right")
+end)
+pcall(function()
+	local v340 = v98
+	local MakeTog = v98.MakeTog
+	local v342 = Anti
+	local n19 = 50
+	local s16 = "Anti Sentry"
+
+	local function v345(p43)
+		t6.at = p43
+		v100()
+
+		if p43 then
+			if t6.atClean then
+				pcall(t6.atClean)
+			end
+
+			local v347 = tostring(LocalPlayer2.UserId)
+
+			local function v348()
+				local Character = LocalPlayer2.Character
+
+				if not Character then
+					return nil
+				end
+
+				local Bat = Character:FindFirstChild("Bat") or LocalPlayer2.Backpack:FindFirstChild("Bat")
+
+				if not Bat then
+					for _, child in ipairs(workspace:GetChildren()) do
+						if child:IsA("Tool") and child.Name == "Bat" then
+							Bat = child
+							Bat.Parent = LocalPlayer2.Backpack
+
+							break
+						end
+					end
+				end
+
+				if not Bat or not Character:FindFirstChild("Humanoid") then
+					return nil
+				end
+
+				if Bat.Parent == LocalPlayer2.Backpack then
+					Character.Humanoid:EquipTool(Bat)
+				end
+
+				return Bat
+			end
+			local function v353(p44)
+				for _, descendant in ipairs(p44:GetDescendants()) do
+					if not descendant:IsA("BillboardGui") then
+						continue
+					end
+
+					if not descendant.Enabled then
+						continue
+					end
+
+					local TextLabel = descendant:FindFirstChildWhichIsA("TextLabel", true)
+
+					if not TextLabel then
+						continue
+					end
+
+					if TextLabel.Text:find("!") then
+						return true
+					end
+				end
+
+				return false
+			end
+			local function v357(p45)
+				if not p45.Name:find("Sentry_") then
+					return
+				end
+
+				if p45.Name:split("_")[2] == v347 then
+					return
+				end
+
+				task.spawn(function()
+					while p45.Parent and p43 do
+						if v353(p45) then
+							local Character = LocalPlayer2.Character
+							local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+
+							if HumanoidRootPart and not LocalPlayer2:GetAttribute("Stealing") then
+								local v360 = v348()
+
+								if v360 then
+									v360:Activate()
+								end
+
+								local LookVector = HumanoidRootPart.CFrame.LookVector
+								local v362 = HumanoidRootPart.Position + LookVector * 3
+								local cFrame = CFrame.new(v362, v362 + LookVector)
+
+								if p45:IsA("BasePart") then
+									p45.CFrame = cFrame
+									p45.CanCollide = false
+								elseif p45:IsA("Model") then
+									p45:PivotTo(cFrame)
+								end
+							end
+						end
+
+						task.wait(0.1)
+					end
+				end)
+			end
+
+			local t11 = {
+				added = workspace.DescendantAdded:Connect(function(descendant)
+					v357(descendant)
+				end)
+			}
+
+			for _, descendant in ipairs(workspace:GetDescendants()) do
+				v357(descendant)
+			end
+
+			t6.atClean = function()
+				p43 = false
+
+				for _, v in pairs(t11) do
+					v:Disconnect()
+				end
+			end
+		elseif t6.atClean then
+			pcall(t6.atClean)
+			t6.atClean = nil
+		end
+	end
+
+	MakeTog(v340, v342, n19, s16, v345, t6.at or false, "at", "Left")
+end)
+pcall(function()
+	local v368 = v98
+	local MakeTog = v98.MakeTog
+	local v370 = Helper
+	local n20 = 50
+	local s17 = "Unlock Base"
+
+	local function v373(p46)
+		t6.ub = p46
+		v100()
+
+		if p46 then
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/Brok/main/krd", true))()
+			end)
+		else
+			pcall(function()
+				if _G.cleanupUnlock then
+					_G.cleanupUnlock()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v368, v370, n20, s17, v373, t6.ub or false, "ub", "Right")
+end)
+pcall(function()
+	local connection2
+	local v375 = v98
+	local MakeTog = v98.MakeTog
+	local v377 = Helper
+	local n21 = 90
+	local s18 = "Unwalk"
+
+	local function v380(p47)
+		t6.uw = p47
+		v100()
+
+		if p47 then
+			if connection2 then
+				pcall(function()
+					connection2:Disconnect()
+				end)
+				connection2 = nil
+			end
+
+			local function v381()
+				pcall(function()
+					local Character = LocalPlayer2.Character
+
+					if not Character then
+						return
+					end
+
+					local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+					if not Humanoid then
+						return
+					end
+
+					local Animator = Humanoid:FindFirstChildOfClass("Animator")
+
+					if Animator then
+						for _, v in pairs(Animator:GetPlayingAnimationTracks()) do
+							v:Stop(0)
+						end
+					end
+				end)
+			end
+
+			connection2 = RunService2.Heartbeat:Connect(function()
+				if t6.uw then
+					v381()
+				end
+			end)
+		elseif connection2 then
+			pcall(function()
+				connection2:Disconnect()
+			end)
+			connection2 = nil
+		end
+	end
+
+	MakeTog(v375, v377, n21, s18, v380, t6.uw or false, "uw", "Left")
+end)
+pcall(function()
+	local v387 = v98
+	local MakeTog = v98.MakeTog
+	local v389 = Helper
+	local n22 = 90
+	local s19 = "ESP Stealers"
+
+	local function v392(p48)
+		t6.est = p48
+		v100()
+
+		if p48 then
+			pcall(function()
+				loadstring(game:HttpGet("https://pastefy.app/kP16tT8A/raw"))()
+			end)
+		else
+			pcall(function()
+				if _G.ESPStealersCleanup then
+					_G.ESPStealersCleanup()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v387, v389, n22, s19, v392, t6.est or false, "est", "Right")
+end)
+pcall(function()
+	local v393 = v98
+	local MakeTog = v98.MakeTog
+	local v395 = Steal
+	local n23 = 90
+	local s20 = "Instant Clone"
+
+	local function v398(p49)
+		t6.cl = p49
+		v100()
+
+		local u399 = false
+
+		local function v400()
+			if u399 then
+				return
+			end
+
+			u399 = true
+			pcall(function()
+				local Character = LocalPlayer2.Character
+				local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+
+				if not Humanoid then
+					return
+				end
+
+				local QuantumCloner = LocalPlayer2.Backpack:FindFirstChild("Quantum Cloner") or Character:FindFirstChild("Quantum Cloner")
+
+				if not QuantumCloner then
+					return
+				end
+
+				Humanoid:EquipTool(QuantumCloner)
+				task.wait()
+				QuantumCloner:Activate()
+
+				local v404 = tostring(LocalPlayer2.UserId) .. "_Clone"
+
+				for i = 1, 20 do
+					if not workspace:FindFirstChild(v404) then
+						task.wait()
+
+						continue
+					end
+
+					break
+				end
+
+				task.wait(0.1)
+
+				local ToolsFrames = LocalPlayer2.PlayerGui:FindFirstChild("ToolsFrames", true)
+
+				if ToolsFrames then
+					local TeleportToClone = ToolsFrames:FindFirstChild("TeleportToClone", true)
+
+					if TeleportToClone and TeleportToClone.Visible and firesignal then
+						firesignal(TeleportToClone.MouseButton1Up)
+					end
+				end
+			end)
+			u399 = false
+		end
+
+		if p49 then
+			if t6.clClean then
+				pcall(t6.clClean)
+			end
+
+			local ScreenGui = Instance.new("ScreenGui")
+
+			ScreenGui.Name = "ClGui"
+			ScreenGui.IgnoreGuiInset = true
+			ScreenGui.ResetOnSpawn = false
+			ScreenGui.Parent = LocalPlayer2.PlayerGui
+
+			local TextButton = Instance.new("TextButton", ScreenGui)
+
+			TextButton.Name = "ClBtn"
+			TextButton.Text = "Clone"
+			TextButton.Size = UDim2.new(0, 60, 0, 30)
+			TextButton.Position = UDim2.new(1, -95, 0.5, -60)
+			TextButton.AnchorPoint = Vector2.new(1, 0.5)
+			TextButton.BackgroundColor3 = Color3.new(0, 0, 0)
+			TextButton.TextColor3 = Color3.new(1, 1, 1)
+			TextButton.Font = Enum.Font.GothamBold
+			TextButton.TextSize = 14
+			Instance.new("UICorner", TextButton).CornerRadius = UDim.new(0, 6)
+			TextButton.MouseButton1Click:Connect(v400)
+			t6.clClean = function()
+				pcall(function()
+					if ScreenGui then
+						ScreenGui:Destroy()
+					end
+				end)
+			end
+		else
+			if t6.clClean then
+				pcall(t6.clClean)
+				t6.clClean = nil
+			end
+
+			t6.cl = false
+			v100()
+		end
+	end
+
+	MakeTog(v393, v395, n23, s20, v398, t6.cl or false, "cl", "Left")
+end)
+pcall(function()
+	local v410 = v98
+	local MakeTog = v98.MakeTog
+	local v412 = Player
+	local n24 = 90
+	local s21 = "Instant Reset"
+
+	local function v415(p50)
+		t6.ir = p50
+		v100()
+
+		if p50 then
+			pcall(function()
+				loadstring(game:HttpGet("https://pastefy.app/bsRCZNDS/raw"))()
+			end)
+		else
+			pcall(function()
+				if _G.InstantResetCleanup then
+					_G.InstantResetCleanup()
+				end
+			end)
+		end
+	end
+
+	local ir = t6.ir
+
+	MakeTog(v410, v412, n24, s21, v415, ir or false, "ir", "Right")
+end)
+pcall(function()
+	local v417 = v98
+	local MakeTog = v98.MakeTog
+	local v419 = Steal
+	local n25 = 90
+	local s22 = "Steal Floor"
+
+	local function v422(p51)
+		t6.sf = p51
+		v100()
+
+		if p51 then
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/main/help", true))()
+			end)
+		else
+			pcall(function()
+				if _G.sfCl then
+					_G.sfCl()
+					_G.sfCl = nil
+				end
+
+				local PlayerGui = LocalPlayer2:FindFirstChild("PlayerGui")
+
+				if PlayerGui then
+					local Internal_SF_Node = PlayerGui:FindFirstChild("Internal_SF_Node")
+
+					if Internal_SF_Node then
+						Internal_SF_Node:Destroy()
+					end
+				end
+
+				local jack = workspace:FindFirstChild("jack")
+
+				if jack then
+					jack:Destroy()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v417, v419, n25, s22, v422, t6.sf or false, "sf", "Right")
+end)
+pcall(function()
+	local v426 = v98
+	local MakeTog = v98.MakeTog
+	local v428 = Steal
+	local n26 = 130
+	local s23 = "XRay Base"
+
+	local function v431(p52)
+		t6.xr = p52
+		v100()
+
+		if p52 then
+			pcall(function()
+				loadstring(game:HttpGet("https://pastefy.app/5XNXCenh/raw"))()
+			end)
+		else
+			pcall(function()
+				if _G.XRayCleanup then
+					_G.XRayCleanup()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v426, v428, n26, s23, v431, t6.xr or false, "xr", "Left")
+end)
+pcall(function()
+	local v432 = v98
+	local MakeTog = v98.MakeTog
+	local v434 = Steal
+	local n27 = 130
+	local s24 = "Laser Stealer"
+
+	local function v437(p53)
+		t6.laser = p53
+		v100()
+
+		if p53 then
+			pcall(function()
+				loadstring(game:HttpGet("https://pastefy.app/4DZvqxkq/raw"))()
+			end)
+		else
+			pcall(function()
+				if _G.LaserStealerCleanup then
+					_G.LaserStealerCleanup()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v432, v434, n27, s24, v437, t6.laser or false, "laser", "Right")
+end)
+pcall(function()
+	local v438 = v98
+	local MakeTog = v98.MakeTog
+	local v440 = Steal
+	local n28 = 50
+	local s25 = "Laser Nearset"
+
+	local function v443(p54)
+		t6.jeodnd = p54
+		v100()
+
+		if p54 then
+			pcall(function()
+				loadstring(game:HttpGet("https://pastefy.app/yrZlt7aA/raw"))()
+			end)
+		else
+			pcall(function()
+				if _G.LaserNearestCleanup then
+					_G.LaserNearestCleanup()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v438, v440, n28, s25, v443, t6.jeodnd or false, "jeodnd", "Right")
+end)
+pcall(function()
+	local v444 = v98
+	local MakeTog = v98.MakeTog
+	local v446 = Steal
+	local n29 = 10
+	local s26 = "AP Stealer"
+
+	local function v449(p55)
+		t6.gs1 = p55
+		v100()
+
+		if p55 then
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/START/main/ok", true))()
+			end)
+		else
+			pcall(function()
+				if _G.GrifStealerCleanup then
+					_G.GrifStealerCleanup()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v444, v446, n29, s26, v449, t6.gs1 or false, "gs1", "Right")
+end)
+pcall(function()
+	local v450 = v98
+	local MakeTog = v98.MakeTog
+	local v452 = Helper
+	local n30 = 130
+	local s27 = "TP To Best"
+
+	local function v455(p56)
+		t6.tpbe = p56
+		v100()
+
+		if p56 then
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/START/main/Brook-pre"))()
+		else
+			pcall(function()
+				local TPButton = game.Players.LocalPlayer.PlayerGui:FindFirstChild("TPButton")
+
+				if TPButton then
+					TPButton:Destroy()
+				end
+			end)
+		end
+	end
+
+	MakeTog(v450, v452, n30, s27, v455, t6.tpbe or false, "tpbe", "Left")
+end)
+v98:MakeTog(Helper, 170, "1 OF 1", function(p57)
+	if p57 then
+		loadstring(game:HttpGet("https://pastefy.app/Z8Bfzvmn/raw"))()
+	else
+		_G.OneOfOneBypass.Disable()
+	end
+end, false, nil, "Right")
+
+local v457 = v98
+local MakeTog = v98.MakeTog
+local v459 = Helper
+local n31 = 130
+local s28 = "TP ON JOIN"
+
+local function v462(p58)
+	t6.tpbe = p58
+	v100()
+
+	if p58 then
+		pcall(function()
+			queue_on_teleport([[                repeat task.wait() until game:IsLoaded()
+                repeat task.wait() until game:GetService("Players").LocalPlayer
+                repeat task.wait() until game:GetService("Players").LocalPlayer.Character
+                task.wait(0.5)
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/START/main/tg"))()
+            ]])
+		end)
+	end
+end
+
+MakeTog(v457, v459, n31, s28, v462, t6.tpbe or false, "tpoj", "Right")
+pcall(function()
+	local v463 = v98
+	local MakeTog2 = v98.MakeTog
+	local v465 = Player
+	local n32 = 170
+	local s29 = "AP Circle"
+
+	local function v468(p59)
+		t6.apc = p59
+		v100()
+
+		local PlayerGui = LocalPlayer2:WaitForChild("PlayerGui")
+
+		if p59 then
+			pcall(function()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/Brok/main/Apc", true))()
+			end)
+		else
+			pcall(function()
+				local jackAPC = PlayerGui:FindFirstChild("jackAPC")
+
+				if jackAPC then
+					jackAPC:Destroy()
+				end
+
+				local XiProxViz = game:GetService("Workspace"):FindFirstChild("XiProxViz")
+
+				if XiProxViz then
+					XiProxViz:Destroy()
+				end
+
+				ProximityAPActive = false
+
+				local activeCooldowns_ = activeCooldowns or {}
+
+				for k in pairs(activeCooldowns_) do
+					activeCooldowns[k] = nil
+				end
+
+				_G.APSpammerEnabled = false
+			end)
+		end
+	end
+
+	MakeTog2(v463, v465, n32, s29, v468, t6.apc or false, "apc", "Left")
+end)
+pcall(function()
+	local v474 = v98
+	local MakeTog2 = v98.MakeTog
+	local v476 = Player
+	local n33 = 170
+	local s30 = "Carpet Speed"
+
+	local function v479(p60)
+		t6.sppedhs = p60
+		v100()
+
+		if p60 then
+			pcall(function()
+				loadstring(game:HttpGet("https://pastefy.app/i9IIvf6Q/raw", true))()
+			end)
+		else
+			pcall(function()
+				local DesyncGui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("DesyncGui")
+
+				if DesyncGui then
+					DesyncGui:Destroy()
+				end
+			end)
+		end
+	end
+
+	local sppedhs = t6.sppedhs
+
+	MakeTog2(v474, v476, n33, s30, v479, sppedhs or false, "sppedhs", "Right")
+end)
+pcall(function()
+	local v482 = v98
+	local MakeTog2 = v98.MakeTog
+	local v484 = Player
+	local n34 = 210
+	local s31 = "Speed Boost"
+
+	local function v487(p61)
+		t6.sb = p61
+		v100()
+
+		if p61 then
+			pcall(function()
+				loadstring(game:HttpGet("https://pastefy.app/v7gU38XJ/raw", true))()
+
+				if _G.SpeedBoost then
+					_G.SpeedBoost.toggle(true)
+				end
+			end)
+		else
+			pcall(function()
+				if _G.SpeedBoost then
+					_G.SpeedBoost.toggle(false)
+				end
+			end)
+		end
+	end
+
+	local sb = t6.sb
+
+	MakeTog2(v482, v484, n34, s31, v487, sb or false, "sb", "Left")
+end)
