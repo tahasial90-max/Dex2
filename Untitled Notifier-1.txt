@@ -1,0 +1,1045 @@
+-- Clean by Prince Bot | .gg/freesource
+
+local WSS_URL = "wss://untitled-notifer-8sja_8saj0.workers.dev"
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+
+local lp = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "UntitledNotifier"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.DisplayOrder = 999
+gui.Parent = gethui and gethui() or lp.PlayerGui
+
+local CONFIG = {
+	FirebaseURL = "https://autojoiner2-2d181-default-rtdb.firebaseio.com/logs.json?orderBy=%22%24key%22&limitToLast=30",
+	GameId = 109983668079237,
+	AutoJoin = true,
+	AutoJoinOG = true,
+	QueueOnOG = false,
+	MaxFeedEntries = 60,
+}
+
+local ALL_BRAINROTS = {
+	"Los Nooo My Hotspotsitos","Serafinna Medusella","La Grande Combinassion","La Easter Grande",
+	"Rang Ring Bus","Guest 666","Los Mi Gatitos","Los Chicleteiras","Noo My Eggs","67",
+	"Donkeyturbo Express","Mariachi Corazoni","Los Burritos","Los 25","Tacorillo Crocodillo",
+	"Swag Soda","Noo my Heart","Chimnino","Los Combinasionas","Chicleteira Noelteira",
+	"Fishino Clownino","Baskito","Tacorita Bicicleta","Los Sweethearts","Spinny Hammy",
+	"Nuclearo Dinosauro","Las Sis","DJ Panda","Chicleteira Cupideira","La Karkerkar Combinasion",
+	"Chillin Chili","Chipso and Queso","Money Money Reindeer","Money Money Puggy",
+	"Churrito Bunnito","Celularcini Viciosini","Los Planitos","Los Mobilis","Los 67",
+	"Mieteteira Bicicleteira","Tuff Toucan","La Spooky Grande","Los Spooky Combinasionas",
+	"Cigno Fulgoro","Los Candies","Los Hotspositos","Los Jolly Combinasionas","Los Cupids",
+	"Los Puggies","W or L","Tralalalaledon","La Extinct Grande Combinasion","Tralaledon",
+	"La Jolly Grande","Los Primos","Bacuru and Egguru","Eviledon","Los Tacoritas","Lovin Rose",
+	"Tang Tang Kelentang","Ketupat Kepat","Los Bros","Tictac Sahur","La Romantic Grande",
+	"Gingerat Gerat","Orcaledon","La Lucky Grande","Ketchuru and Masturu","Jolly Jolly Sahur",
+	"Garama and Madundung","Rosetti Tualetti","Nacho Spyder","Hopilikalika Hopilikalako",
+	"Festive 67","Sammyni Fattini","Love Love Bear","La Ginger Sekolah","Spooky and Pumpky",
+	"Boppin Bunny","Lavadorito Spinito","La Food Combinasion","Los Spaghettis","La Casa Boo",
+	"Fragrama and Chocrama","Los Sekolahs","Foxini Lanternini","La Secret Combinasion",
+	"Los Amigos","Reinito Sleighito","Ketupat Bros","Burguro and Fryuro","Cooki and Milki",
+	"Capitano Moby","Rosey and Teddy","Popcuru and Fizzuru","Hydra Bunny","Celestial Pegasus",
+	"Cerberus","La Supreme Combinasion","Dragon Cannelloni","Dragon Gingerini","Headless Horseman",
+	"Hydra Dragon Cannelloni","Griffin","Skibidi Toilet","Meowl","Strawberry Elephant",
+	"La Vacca Saturno Saturnita","Pandanini Frostini","Bisonte Giuppitere","Blackhole Goat",
+	"Jackorilla","Agarrini Ia Palini","Chachechi","Karkerkar Kurkur","Los Tortus","Los Matteos",
+	"Sammyni Spyderini","Trenostruzzo Turbo 4000","Chimpanzini Spiderini","Boatito Auratito",
+	"Fragola La La La","Dul Dul Dul","La Vacca Prese Presente","Frankentteo","Los Trios",
+	"Karker Sahur","Torrtuginni Dragonfrutini (Lucky Block)","Los Tralaleritos","Zombie Tralala",
+	"La Cucaracha","Vulturino Skeletono","Guerriro Digitale","Extinct Tralalero","Yess My Examine",
+	"Extinct Matteo","Las Tralaleritas","Rocco Disco","Reindeer Tralala","Las Vaquitas Saturnitas",
+	"Pumpkin Spyderini","Job Job Job Sahur","Los Karkeritos","Graipuss Medussi","Santteo",
+	"Fishboard","Buntteo","La Vacca Jacko Linterino","Triplito Tralaleritos","Trickolino",
+	"Paradiso Axolottino","GOAT","Giftini Spyderini","Los Spyderinis","Love Love Love Sahur",
+	"Perrito Burrito","1x1x1x1","Los Cucarachas","Easter Easter Sahur","Please My Present",
+	"Cuadramat and Pakrahmatmamat","Los Jobcitos","Nooo My Hotspot","Pot Hotspot (Lucky Block)",
+	"Noo My Examine","Telemorte","La Sahur Combinasion","List List List Sahur","Bunny Bunny Bunny Sahur",
+	"To To To Sahur","Pirulitoita Bicicletaire","25","Santa Hotspot","Horegini Boom",
+	"Quesadilla Crocodila","Pot Pumpkin","Naughty Naughty","Cupid Cupid Sahur","Ho Ho Ho Sahur",
+	"Mi Gatito","Chicleteira Bicicleteira","Eid Eid Eid Sahur","Cupid Hotspot",
+	"Spaghetti Tualetti (Lucky Block)","Esok Sekolah (Lucky Block)","Quesadillo Vampiro",
+	"Brunito Marsito","Chill Puppy","Burrito Bandito","Chicleteirina Bicicleteirina","Granny",
+	"Los Bunitos","Los Quesadillas","Bunito Bunito Spinito","Noo My Candy","John Pork",
+}
+
+local OG_TIER = {
+	["John Pork"] = true,
+	["Strawberry Elephant"] = true,
+	["Meowl"] = true,
+	["Headless Horseman"] = true,
+	["La Supreme Combinasion"] = true,
+}
+
+local DRAGON_TIER = {
+	["Dragon Cannelloni"] = true,
+	["Dragon Gingerini"] = true,
+	["Hydra Dragon Cannelloni"] = true,
+	["Los Dragons)"] = true,
+}
+
+local function randJobId()
+	local chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	local function seg(n)
+		local s = ""
+		for i = 1, n do
+			local r = math.random(1, #chars)
+			s = s .. chars:sub(r, r)
+		end
+		return s
+	end
+	return seg(8).."-"..seg(4).."-"..seg(4).."-"..seg(4).."-"..seg(12)
+end
+
+local function timeNow()
+	local t = os.time()
+	return os.date("%H:%M:%S", t)
+end
+
+local function randFrom(tbl)
+	return tbl[math.random(1, #tbl)]
+end
+
+local function isOG(name)
+	return OG_TIER[name] == true
+end
+
+local function isDragon(name)
+	return DRAGON_TIER[name] == true or name:lower():find("dragon") ~= nil
+end
+
+local function lerp(a, b, t)
+	return a + (b - a) * t
+end
+
+local C = {
+	bg        = Color3.fromRGB(14, 14, 14),
+	bg2       = Color3.fromRGB(22, 22, 22),
+	bg3       = Color3.fromRGB(30, 30, 30),
+	bg4       = Color3.fromRGB(37, 37, 37),
+	border    = Color3.fromRGB(42, 42, 42),
+	text      = Color3.fromRGB(232, 232, 232),
+	text2     = Color3.fromRGB(136, 136, 136),
+	text3     = Color3.fromRGB(85, 85, 85),
+	green     = Color3.fromRGB(74, 222, 128),
+	red       = Color3.fromRGB(248, 113, 113),
+	orange    = Color3.fromRGB(251, 146, 60),
+	yellow    = Color3.fromRGB(251, 191, 36),
+	blue      = Color3.fromRGB(96, 165, 250),
+	purple    = Color3.fromRGB(167, 139, 250),
+	toggleOn  = Color3.fromRGB(239, 68, 68),
+	toggleOff = Color3.fromRGB(51, 51, 51),
+}
+
+local function make(cls, props)
+	local inst = Instance.new(cls)
+	for k, v in pairs(props) do
+		inst[k] = v
+	end
+	return inst
+end
+
+local function mkFrame(parent, props)
+	local f = make("Frame", {
+		BackgroundColor3 = C.bg2,
+		BorderSizePixel = 0,
+		Parent = parent,
+	})
+	for k, v in pairs(props or {}) do f[k] = v end
+	return f
+end
+
+local function mkText(parent, props)
+	local t = make("TextLabel", {
+		BackgroundTransparency = 1,
+		TextColor3 = C.text,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 12,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = parent,
+	})
+	for k, v in pairs(props or {}) do t[k] = v end
+	return t
+end
+
+local function mkBtn(parent, props)
+	local b = make("TextButton", {
+		BackgroundColor3 = C.bg3,
+		BorderSizePixel = 0,
+		TextColor3 = C.text2,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 11,
+		AutoButtonColor = false,
+		Parent = parent,
+	})
+	for k, v in pairs(props or {}) do b[k] = v end
+	b.MouseEnter:Connect(function()
+		TweenService:Create(b, TweenInfo.new(.12), {BackgroundColor3 = C.bg4, TextColor3 = C.text}):Play()
+	end)
+	b.MouseLeave:Connect(function()
+		TweenService:Create(b, TweenInfo.new(.12), {BackgroundColor3 = C.bg3, TextColor3 = C.text2}):Play()
+	end)
+	return b
+end
+
+local function mkCorner(parent, r)
+	make("UICorner", {CornerRadius = UDim.new(0, r or 8), Parent = parent})
+end
+
+local function mkStroke(parent, col, thick)
+	make("UIStroke", {Color = col or C.border, Thickness = thick or 1, Parent = parent})
+end
+
+local function mkPad(parent, top, right, bottom, left)
+	make("UIPadding", {
+		PaddingTop    = UDim.new(0, top    or 0),
+		PaddingRight  = UDim.new(0, right  or 0),
+		PaddingBottom = UDim.new(0, bottom or 0),
+		PaddingLeft   = UDim.new(0, left   or 0),
+		Parent = parent,
+	})
+end
+
+local function mkList(parent, padding, dir)
+	make("UIListLayout", {
+		Padding = UDim.new(0, padding or 0),
+		FillDirection = dir or Enum.FillDirection.Vertical,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Parent = parent,
+	})
+end
+
+local function mkToggle(parent, state, onChange)
+	local track = mkFrame(parent, {
+		Size = UDim2.new(0, 36, 0, 20),
+		BackgroundColor3 = state and C.toggleOn or C.toggleOff,
+	})
+	mkCorner(track, 10)
+
+	local knob = mkFrame(track, {
+		Size = UDim2.new(0, 14, 0, 14),
+		Position = state and UDim2.new(0, 18, 0, 3) or UDim2.new(0, 4, 0, 3),
+		BackgroundColor3 = Color3.fromRGB(255,255,255),
+	})
+	mkCorner(knob, 7)
+
+	local on = state
+
+	track.InputBegan:Connect(function(inp)
+		if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+			on = not on
+			TweenService:Create(track, TweenInfo.new(.15), {BackgroundColor3 = on and C.toggleOn or C.toggleOff}):Play()
+			TweenService:Create(knob, TweenInfo.new(.15), {Position = on and UDim2.new(0,18,0,3) or UDim2.new(0,4,0,3)}):Play()
+			if onChange then onChange(on) end
+		end
+	end)
+
+	return track, function() return on end
+end
+
+local window = mkFrame(gui, {
+	Size = UDim2.new(0, 680, 0, 520),
+	Position = UDim2.new(0.5, -340, 0.5, -260),
+	BackgroundColor3 = C.bg,
+	Active = true,
+	Draggable = true,
+	ZIndex = 10,
+})
+mkCorner(window, 12)
+mkStroke(window, Color3.fromRGB(255,255,255), 0.5)
+window.UIStroke.Transparency = 0.96
+
+local shadow = mkFrame(gui, {
+	Size = UDim2.new(0, 720, 0, 560),
+	Position = UDim2.new(0.5, -360, 0.5, -280),
+	BackgroundColor3 = Color3.fromRGB(0,0,0),
+	BackgroundTransparency = 0.5,
+	ZIndex = 9,
+})
+mkCorner(shadow, 16)
+
+local sidebar = mkFrame(window, {
+	Size = UDim2.new(0, 48, 1, 0),
+	BackgroundColor3 = C.bg2,
+	ZIndex = 11,
+})
+mkCorner(sidebar, 12)
+mkFrame(sidebar, {
+	Size = UDim2.new(0, 10, 1, 0),
+	Position = UDim2.new(1, -10, 0, 0),
+	BackgroundColor3 = C.bg2,
+	ZIndex = 10,
+})
+
+local sideList = make("UIListLayout", {
+	Padding = UDim.new(0, 6),
+	FillDirection = Enum.FillDirection.Vertical,
+	HorizontalAlignment = Enum.HorizontalAlignment.Center,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = sidebar,
+})
+mkPad(sidebar, 12, 0, 12, 0)
+
+local sideIcons = {}
+local currentTab = "logs"
+
+local function mkSideIcon(icon, tabName, order)
+	local btn = make("TextButton", {
+		Size = UDim2.new(0, 32, 0, 32),
+		BackgroundColor3 = tabName == "logs" and C.bg4 or C.bg2,
+		BorderSizePixel = 0,
+		Text = icon,
+		TextSize = 14,
+		Font = Enum.Font.GothamMedium,
+		TextColor3 = tabName == "logs" and C.text or C.text3,
+		AutoButtonColor = false,
+		LayoutOrder = order,
+		ZIndex = 12,
+		Parent = sidebar,
+	})
+	mkCorner(btn, 8)
+	sideIcons[tabName] = btn
+	return btn
+end
+
+local iconLogs    = mkSideIcon("≋", "logs",     1)
+local iconConfig  = mkSideIcon("⚙", "config",   2)
+local iconShield  = mkSideIcon("◈", "shield",   3)
+local iconSettings= mkSideIcon("⊙", "settings", 10)
+iconSettings.LayoutOrder = 99
+
+local spacer = make("Frame", {
+	Size = UDim2.new(0, 32, 0, 0),
+	BackgroundTransparency = 1,
+	LayoutOrder = 50,
+	Parent = sidebar,
+})
+make("UIFlexItem", {FlexMode = Enum.UIFlexMode.Fill, Parent = spacer})
+
+local content = mkFrame(window, {
+	Size = UDim2.new(1, -48, 1, 0),
+	Position = UDim2.new(0, 48, 0, 0),
+	BackgroundTransparency = 1,
+})
+
+local topbar = mkFrame(content, {
+	Size = UDim2.new(1, 0, 0, 36),
+	BackgroundTransparency = 1,
+})
+mkStroke(topbar, C.border)
+
+local titleLabel = mkText(topbar, {
+	Size = UDim2.new(0.5, 0, 1, 0),
+	Position = UDim2.new(0, 14, 0, 0),
+	Text = "untitled notifier / Logs",
+	TextColor3 = C.text2,
+	Font = Enum.Font.Gotham,
+	TextSize = 11,
+})
+
+local topRight = mkFrame(topbar, {
+	Size = UDim2.new(0, 180, 1, 0),
+	Position = UDim2.new(1, -190, 0, 0),
+	BackgroundTransparency = 1,
+})
+
+local pingLabel = mkText(topRight, {
+	Size = UDim2.new(0, 40, 1, 0),
+	Position = UDim2.new(0, 0, 0, 0),
+	Text = "21ms",
+	TextColor3 = C.text3,
+	TextSize = 11,
+	Font = Enum.Font.GothamMedium,
+})
+
+local onlineBadge = mkFrame(topRight, {
+	Size = UDim2.new(0, 68, 0, 20),
+	Position = UDim2.new(1, -68, 0.5, -10),
+	BackgroundColor3 = Color3.fromRGB(74, 222, 128):Lerp(Color3.fromRGB(0,0,0), 0.88),
+})
+mkCorner(onlineBadge, 10)
+mkStroke(onlineBadge, Color3.fromRGB(74,222,128), 0.8)
+onlineBadge.UIStroke.Transparency = 0.75
+
+local onlineDot = mkFrame(onlineBadge, {
+	Size = UDim2.new(0, 6, 0, 6),
+	Position = UDim2.new(0, 8, 0.5, -3),
+	BackgroundColor3 = C.green,
+})
+mkCorner(onlineDot, 3)
+
+local onlineText = mkText(onlineBadge, {
+	Size = UDim2.new(1, -20, 1, 0),
+	Position = UDim2.new(0, 18, 0, 0),
+	Text = "Online",
+	TextColor3 = C.green,
+	TextSize = 11,
+	Font = Enum.Font.GothamMedium,
+})
+
+local dotPulse = true
+RunService.Heartbeat:Connect(function()
+	if not dotPulse then return end
+	local t = tick() % 2
+	local alpha = t < 1 and t or 2 - t
+	onlineDot.BackgroundTransparency = lerp(0, 0.6, alpha)
+end)
+
+local pages = {}
+
+local function mkPage(name)
+	local p = mkFrame(content, {
+		Size = UDim2.new(1, 0, 1, -36),
+		Position = UDim2.new(0, 0, 0, 36),
+		BackgroundTransparency = 1,
+		Visible = name == "logs",
+	})
+	pages[name] = p
+	return p
+end
+
+local logsPage = mkPage("logs")
+
+local controls = mkFrame(logsPage, {
+	Size = UDim2.new(1, 0, 0, 90),
+	BackgroundTransparency = 1,
+})
+mkPad(controls, 8, 10, 8, 10)
+mkList(controls, 6)
+
+local row1 = mkFrame(controls, {
+	Size = UDim2.new(1, 0, 0, 36),
+	BackgroundTransparency = 1,
+	LayoutOrder = 1,
+})
+mkList(row1, 6, Enum.FillDirection.Horizontal)
+
+local ajCard = mkFrame(row1, {
+	Size = UDim2.new(0.38, -4, 1, 0),
+	BackgroundColor3 = C.bg2,
+	LayoutOrder = 1,
+})
+mkCorner(ajCard, 8)
+mkStroke(ajCard, C.border)
+mkPad(ajCard, 0, 10, 0, 10)
+
+local ajLabel = mkText(ajCard, {
+	Size = UDim2.new(1, -44, 1, 0),
+	Text = "Auto join",
+	TextSize = 12,
+	Font = Enum.Font.GothamMedium,
+})
+
+local ajToggleFrame, ajGetState = mkToggle(ajCard, CONFIG.AutoJoin, function(v)
+	CONFIG.AutoJoin = v
+end)
+ajToggleFrame.Position = UDim2.new(1, -36, 0.5, -10)
+ajToggleFrame.AnchorPoint = Vector2.new(0, 0)
+
+local qogCard = mkFrame(row1, {
+	Size = UDim2.new(0.38, -4, 1, 0),
+	BackgroundColor3 = C.bg2,
+	LayoutOrder = 2,
+})
+mkCorner(qogCard, 8)
+mkStroke(qogCard, C.border)
+mkPad(qogCard, 0, 10, 0, 10)
+
+local qogLabel = mkText(qogCard, {
+	Size = UDim2.new(1, -44, 1, 0),
+	Text = "Queue on OG",
+	TextSize = 12,
+	Font = Enum.Font.GothamMedium,
+})
+
+local qogToggleFrame, qogGetState = mkToggle(qogCard, CONFIG.QueueOnOG, function(v)
+	CONFIG.QueueOnOG = v
+end)
+qogToggleFrame.Position = UDim2.new(1, -36, 0.5, -10)
+
+local attCard = mkFrame(row1, {
+	Size = UDim2.new(0.24, -4, 1, 0),
+	BackgroundColor3 = C.bg2,
+	LayoutOrder = 3,
+})
+mkCorner(attCard, 8)
+mkStroke(attCard, C.border)
+mkPad(attCard, 0, 10, 0, 10)
+
+local attLabel = mkText(attCard, {
+	Size = UDim2.new(0.6, 0, 1, 0),
+	Text = "Attempts",
+	TextSize = 12,
+	Font = Enum.Font.GothamMedium,
+	TextColor3 = C.text2,
+})
+
+local attNum = mkText(attCard, {
+	Size = UDim2.new(0.4, 0, 1, 0),
+	Position = UDim2.new(0.6, 0, 0, 0),
+	Text = "0",
+	TextSize = 14,
+	Font = Enum.Font.GothamBold,
+	TextXAlignment = Enum.TextXAlignment.Right,
+})
+
+local row2 = mkFrame(controls, {
+	Size = UDim2.new(1, 0, 0, 36),
+	BackgroundColor3 = C.bg2,
+	LayoutOrder = 2,
+})
+mkCorner(row2, 8)
+mkStroke(row2, C.border)
+mkPad(row2, 0, 10, 0, 10)
+
+local ajoLabel = mkText(row2, {
+	Size = UDim2.new(1, -50, 0, 16),
+	Position = UDim2.new(0, 0, 0, 4),
+	Text = "Auto Join OG",
+	TextSize = 12,
+	Font = Enum.Font.GothamMedium,
+})
+
+local ajoDesc = mkText(row2, {
+	Size = UDim2.new(1, -50, 0, 14),
+	Position = UDim2.new(0, 0, 0, 20),
+	Text = "Always joins an OG when it spawns, even with Auto join off or if it isn't in your logs",
+	TextSize = 10,
+	Font = Enum.Font.Gotham,
+	TextColor3 = C.text2,
+	TextWrapped = true,
+})
+
+local ajoToggle, ajoGetState = mkToggle(row2, CONFIG.AutoJoinOG, function(v)
+	CONFIG.AutoJoinOG = v
+end)
+ajoToggle.Position = UDim2.new(1, -36, 0.5, -10)
+
+local actionRow = mkFrame(logsPage, {
+	Size = UDim2.new(1, 0, 0, 34),
+	Position = UDim2.new(0, 0, 0, 90),
+	BackgroundTransparency = 1,
+})
+mkPad(actionRow, 0, 10, 0, 10)
+mkList(actionRow, 6, Enum.FillDirection.Horizontal)
+mkStroke(actionRow, C.border)
+
+local function mkActionBtn(label, order, onClick)
+	local b = mkBtn(actionRow, {
+		Size = UDim2.new(0.333, -4, 1, 0),
+		Text = label,
+		TextSize = 11,
+		Font = Enum.Font.GothamMedium,
+		BackgroundColor3 = C.bg2,
+		TextColor3 = C.text2,
+		LayoutOrder = order,
+	})
+	mkCorner(b, 8)
+	mkStroke(b, C.border)
+	b.MouseButton1Click:Connect(onClick)
+	return b
+end
+
+local feedEntries = {}
+local attempts = 0
+local joiningActive = true
+
+local function updateAttempts(n)
+	attempts = n
+	attNum.Text = tostring(attempts)
+end
+
+local clearBtn    = mkActionBtn("⌫  Clear feed",  1, function()
+	feedEntries = {}
+	updateAttempts(0)
+end)
+
+local stopBtn     = mkActionBtn("⊘  Stop joining", 2, function()
+	joiningActive = not joiningActive
+	stopBtn.Text = joiningActive and "⊘  Stop joining" or "▶  Start joining"
+end)
+
+local reconnectBtn= mkActionBtn("↺  Reconnect",   3, function()
+	seenFirebaseKeys = {}
+	firebaseQueue = {}
+end)
+
+local feedHeader = mkFrame(logsPage, {
+	Size = UDim2.new(1, 0, 0, 24),
+	Position = UDim2.new(0, 0, 0, 124),
+	BackgroundTransparency = 1,
+})
+mkStroke(feedHeader, C.border)
+mkPad(feedHeader, 0, 14, 0, 14)
+
+local feedHeaderDot = mkFrame(feedHeader, {
+	Size = UDim2.new(0, 5, 0, 5),
+	Position = UDim2.new(0, 0, 0.5, -2),
+	BackgroundColor3 = C.green,
+})
+mkCorner(feedHeaderDot, 3)
+
+local feedHeaderLabel = mkText(feedHeader, {
+	Size = UDim2.new(1, -20, 1, 0),
+	Position = UDim2.new(0, 10, 0, 0),
+	Text = "LIVE FEED · TEXAS",
+	TextSize = 10,
+	Font = Enum.Font.GothamBold,
+	TextColor3 = C.text3,
+})
+
+RunService.Heartbeat:Connect(function()
+	local t = tick() % 2
+	local alpha = t < 1 and t or 2 - t
+	feedHeaderDot.BackgroundTransparency = lerp(0, 0.6, alpha)
+end)
+
+local feedScroll = make("ScrollingFrame", {
+	Size = UDim2.new(1, 0, 1, -148),
+	Position = UDim2.new(0, 0, 0, 148),
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	ScrollBarThickness = 3,
+	ScrollBarImageColor3 = Color3.fromRGB(50,50,50),
+	CanvasSize = UDim2.new(0, 0, 0, 0),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	Parent = logsPage,
+})
+
+local feedList = make("UIListLayout", {
+	Padding = UDim.new(0, 0),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = feedScroll,
+})
+
+local emptyState = mkFrame(feedScroll, {
+	Size = UDim2.new(1, 0, 0, 120),
+	BackgroundTransparency = 1,
+	LayoutOrder = 999,
+})
+
+local emptyIcon = mkText(emptyState, {
+	Size = UDim2.new(1, 0, 0, 40),
+	Position = UDim2.new(0, 0, 0, 20),
+	Text = "⊙",
+	TextSize = 22,
+	TextColor3 = C.text3,
+	TextXAlignment = Enum.TextXAlignment.Center,
+})
+
+local emptyTitle = mkText(emptyState, {
+	Size = UDim2.new(1, 0, 0, 20),
+	Position = UDim2.new(0, 0, 0, 62),
+	Text = "Waiting for a log",
+	TextSize = 12,
+	Font = Enum.Font.GothamBold,
+	TextColor3 = C.text2,
+	TextXAlignment = Enum.TextXAlignment.Center,
+})
+
+local emptyDesc = mkText(emptyState, {
+	Size = UDim2.new(1, 0, 0, 16),
+	Position = UDim2.new(0, 0, 0, 82),
+	Text = "Brainrots in your config will appear here.",
+	TextSize = 11,
+	TextColor3 = C.text3,
+	TextXAlignment = Enum.TextXAlignment.Center,
+})
+
+local entryOrder = 0
+
+local function addFeedEntry(name, jobId, section)
+	entryOrder = entryOrder - 1
+	emptyState.Visible = false
+
+	local og = isOG(name)
+	local dragon = isDragon(name)
+
+	local row = mkFrame(feedScroll, {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+		LayoutOrder = entryOrder,
+	})
+
+	local accentBar = mkFrame(row, {
+		Size = UDim2.new(0, 2, 1, 0),
+		BackgroundColor3 = og and C.yellow or dragon and C.purple or section == "bad" and C.red or C.blue,
+		BackgroundTransparency = og and 0.4 or dragon and 0.4 or 0.6,
+	})
+
+	if og then
+		row.BackgroundColor3 = C.yellow
+		row.BackgroundTransparency = 0.96
+	elseif dragon then
+		row.BackgroundColor3 = C.purple
+		row.BackgroundTransparency = 0.96
+	end
+	row.BackgroundTransparency = og and 0.94 or dragon and 0.94 or 1
+
+	local nameLabel = mkText(row, {
+		Size = UDim2.new(1, -160, 1, 0),
+		Position = UDim2.new(0, 10, 0, 0),
+		Text = name,
+		TextSize = 11,
+		Font = Enum.Font.GothamMedium,
+		TextColor3 = og and C.yellow or dragon and C.purple or C.text,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+	})
+
+	local jobLabel = mkText(row, {
+		Size = UDim2.new(0, 72, 1, 0),
+		Position = UDim2.new(1, -155, 0, 0),
+		Text = jobId:sub(1,8).."…",
+		TextSize = 10,
+		Font = Enum.Font.Code,
+		TextColor3 = C.text3,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+
+	local timeLabel = mkText(row, {
+		Size = UDim2.new(0, 54, 1, 0),
+		Position = UDim2.new(1, -78, 0, 0),
+		Text = timeNow(),
+		TextSize = 10,
+		Font = Enum.Font.Gotham,
+		TextColor3 = C.text3,
+		TextXAlignment = Enum.TextXAlignment.Right,
+	})
+
+	local joinBtn = make("TextButton", {
+		Size = UDim2.new(0, 44, 0, 20),
+		Position = UDim2.new(1, -50, 0.5, -10),
+		BackgroundColor3 = og and C.yellow:Lerp(Color3.new(0,0,0), 0.88) or C.green:Lerp(Color3.new(0,0,0), 0.88),
+		BorderSizePixel = 0,
+		Text = "Join",
+		TextSize = 10,
+		Font = Enum.Font.GothamBold,
+		TextColor3 = og and C.yellow or C.green,
+		AutoButtonColor = false,
+		Parent = row,
+	})
+	mkCorner(joinBtn, 4)
+	mkStroke(joinBtn, og and C.yellow or C.green, 0.7)
+	joinBtn.UIStroke.Transparency = 0.75
+
+	joinBtn.MouseButton1Click:Connect(function()
+		local ok, err = pcall(function()
+			TeleportService:TeleportToPlaceInstance(CONFIG.GameId, jobId, lp)
+		end)
+		if not ok then
+			warn("[UntitledNotifier] Teleport failed:", err)
+		end
+	end)
+
+	local children = feedScroll:GetChildren()
+	local frameCount = 0
+	for _, c in ipairs(children) do
+		if c:IsA("Frame") and c.Name ~= "EmptyState" then
+			frameCount += 1
+		end
+	end
+	if frameCount > CONFIG.MaxFeedEntries then
+		local sorted = {}
+		for _, c in ipairs(children) do
+			if c:IsA("Frame") and c.LayoutOrder ~= 999 then
+				table.insert(sorted, c)
+			end
+		end
+		table.sort(sorted, function(a, b) return a.LayoutOrder > b.LayoutOrder end)
+		if sorted[1] then sorted[1]:Destroy() end
+	end
+
+	if joiningActive then
+		updateAttempts(attempts + 1)
+	end
+end
+
+local configPage = mkPage("config")
+mkPad(configPage, 14, 14, 14, 14)
+
+local configTitle = mkText(configPage, {
+	Size = UDim2.new(1, 0, 0, 20),
+	Text = "Sources",
+	TextSize = 13,
+	Font = Enum.Font.GothamBold,
+})
+
+local configDesc = mkText(configPage, {
+	Size = UDim2.new(1, 0, 0, 16),
+	Position = UDim2.new(0, 0, 0, 24),
+	Text = "Manage where the notifier pulls brainrot data from.",
+	TextSize = 10,
+	Font = Enum.Font.Gotham,
+	TextColor3 = C.text2,
+})
+
+local fbCard = mkFrame(configPage, {
+	Size = UDim2.new(1, 0, 0, 72),
+	Position = UDim2.new(0, 0, 0, 52),
+	BackgroundColor3 = C.bg2,
+})
+mkCorner(fbCard, 8)
+mkStroke(fbCard, C.border)
+mkPad(fbCard, 10, 12, 10, 12)
+
+local fbTitle = mkText(fbCard, {
+	Size = UDim2.new(1, -60, 0, 16),
+	Text = "Firebase Realtime Database",
+	TextSize = 12,
+	Font = Enum.Font.GothamBold,
+})
+
+local fbStatusDot = mkFrame(fbCard, {
+	Size = UDim2.new(0, 6, 0, 6),
+	Position = UDim2.new(1, -18, 0, 8),
+	BackgroundColor3 = C.green,
+})
+mkCorner(fbStatusDot, 3)
+
+local fbStatusLabel = mkText(fbCard, {
+	Size = UDim2.new(0, 40, 0, 14),
+	Position = UDim2.new(1, -58, 0, 2),
+	Text = "Active",
+	TextSize = 10,
+	Font = Enum.Font.Gotham,
+	TextColor3 = C.green,
+	TextXAlignment = Enum.TextXAlignment.Right,
+})
+
+local fbUrlBox = make("TextBox", {
+	Size = UDim2.new(1, 0, 0, 24),
+	Position = UDim2.new(0, 0, 0, 22),
+	BackgroundColor3 = C.bg3,
+	BorderSizePixel = 0,
+	Text = CONFIG.FirebaseURL,
+	TextSize = 9,
+	Font = Enum.Font.Code,
+	TextColor3 = C.text2,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	ClearTextOnFocus = false,
+	Parent = fbCard,
+})
+mkCorner(fbUrlBox, 6)
+mkStroke(fbUrlBox, C.border)
+mkPad(fbUrlBox, 0, 8, 0, 8)
+
+local fbSaveBtn = make("TextButton", {
+	Size = UDim2.new(0, 56, 0, 20),
+	Position = UDim2.new(1, -56, 1, -24),
+	BackgroundColor3 = C.green:Lerp(Color3.new(0,0,0), 0.88),
+	BorderSizePixel = 0,
+	Text = "Save",
+	TextSize = 10,
+	Font = Enum.Font.GothamBold,
+	TextColor3 = C.green,
+	AutoButtonColor = false,
+	Parent = fbCard,
+})
+mkCorner(fbSaveBtn, 6)
+mkStroke(fbSaveBtn, C.green, 0.7)
+fbSaveBtn.UIStroke.Transparency = 0.75
+
+fbSaveBtn.MouseButton1Click:Connect(function()
+	CONFIG.FirebaseURL = fbUrlBox.Text
+	seenFirebaseKeys = {}
+	firebaseQueue = {}
+	fbSaveBtn.Text = "Saved ✓"
+	task.delay(1.5, function()
+		fbSaveBtn.Text = "Save"
+	end)
+end)
+
+local addSrcBtn = make("TextButton", {
+	Size = UDim2.new(1, 0, 0, 32),
+	Position = UDim2.new(0, 0, 0, 136),
+	BackgroundColor3 = C.bg2,
+	BorderSizePixel = 0,
+	Text = "+  Add source",
+	TextSize = 11,
+	Font = Enum.Font.GothamMedium,
+	TextColor3 = C.text2,
+	AutoButtonColor = false,
+	Parent = configPage,
+})
+mkCorner(addSrcBtn, 8)
+mkStroke(addSrcBtn, C.border)
+
+local addSrcToast = mkFrame(configPage, {
+	Size = UDim2.new(0, 180, 0, 28),
+	Position = UDim2.new(0, 0, 0, 174),
+	BackgroundColor3 = C.bg3,
+	Visible = false,
+})
+mkCorner(addSrcToast, 6)
+mkStroke(addSrcToast, C.border)
+mkText(addSrcToast, {
+	Size = UDim2.new(1, -16, 1, 0),
+	Position = UDim2.new(0, 8, 0, 0),
+	Text = "More sources coming soon.",
+	TextSize = 10,
+	Font = Enum.Font.Gotham,
+	TextColor3 = C.text2,
+})
+
+addSrcBtn.MouseButton1Click:Connect(function()
+	addSrcToast.Visible = true
+	task.delay(2, function()
+		addSrcToast.Visible = false
+	end)
+end)
+
+local tabPageMap = {
+	logs    = logsPage,
+	config  = configPage,
+}
+
+local tabIconMap = {
+	logs    = iconLogs,
+	config  = iconConfig,
+}
+
+local function switchTab(name)
+	currentTab = name
+	titleLabel.Text = "untitled notifier / " .. (name:sub(1,1):upper()..name:sub(2))
+	for n, page in pairs(pages) do
+		page.Visible = n == name
+	end
+	for n, icon in pairs(sideIcons) do
+		if n == name then
+			TweenService:Create(icon, TweenInfo.new(.12), {BackgroundColor3 = C.bg4, TextColor3 = C.text}):Play()
+		else
+			TweenService:Create(icon, TweenInfo.new(.12), {BackgroundColor3 = C.bg2, TextColor3 = C.text3}):Play()
+		end
+	end
+end
+
+iconLogs.MouseButton1Click:Connect(function() switchTab("logs") end)
+iconConfig.MouseButton1Click:Connect(function() switchTab("config") end)
+iconShield.MouseButton1Click:Connect(function() switchTab("logs") end)
+iconSettings.MouseButton1Click:Connect(function() switchTab("config") end)
+
+local seenFirebaseKeys = {}
+local firebaseQueue = {}
+
+local function pollFirebase()
+	local ok, result = pcall(function()
+		local response = game:GetService("HttpService"):GetAsync(CONFIG.FirebaseURL)
+		return game:GetService("HttpService"):JSONDecode(response)
+	end)
+	if not ok or not result then return end
+
+	local keys = {}
+	for k in pairs(result) do table.insert(keys, k) end
+	table.sort(keys)
+
+	for _, k in ipairs(keys) do
+		if not seenFirebaseKeys[k] then
+			seenFirebaseKeys[k] = true
+			local entry = result[k]
+			local name = entry.brainrot or entry.name or entry.brainrotName or randFrom(ALL_BRAINROTS)
+			local jobId = entry.jobId or randJobId()
+			table.insert(firebaseQueue, {name = name, jobId = jobId})
+		end
+	end
+end
+
+local lastBadDrip = 0
+local function drainFirebaseQueue()
+	local t = tick()
+	if t - lastBadDrip >= 58 + math.random() * 20 then
+		if #firebaseQueue > 0 then
+			local item = table.remove(firebaseQueue, 1)
+			addFeedEntry(item.name, item.jobId, "bad")
+			lastBadDrip = t
+		end
+	end
+end
+
+local MID_TIER = {}
+for _, b in ipairs(ALL_BRAINROTS) do
+	if not OG_TIER[b] and not DRAGON_TIER[b] then
+		table.insert(MID_TIER, b)
+	end
+end
+
+local lastMidSpawn = tick() + 12
+local midDelay = 60 + math.random() * 30
+
+local function checkMidLight()
+	local t = tick()
+	if t - lastMidSpawn >= midDelay then
+		local name = randFrom(MID_TIER)
+		addFeedEntry(name, randJobId(), "mid")
+		lastMidSpawn = t
+		midDelay = 60 + math.random() * 30
+	end
+end
+
+local OG_NAMES = {
+	"John Pork",
+	"Strawberry Elephant",
+	"Meowl",
+	"Headless Horseman",
+}
+
+local lastOGWindow = -1
+
+local function checkOGWindow()
+	local utcTime = os.time()
+	local utcMins = math.floor(utcTime / 60)
+	local window10 = math.floor(utcMins / 10)
+
+	if window10 ~= lastOGWindow then
+		lastOGWindow = window10
+		local idx = (window10 % #OG_NAMES) + 1
+		local name = OG_NAMES[idx]
+		addFeedEntry(name, randJobId(), "og")
+
+		if CONFIG.AutoJoinOG then
+			local jobId = randJobId()
+			task.delay(0.5, function()
+				pcall(function()
+					TeleportService:TeleportToPlaceInstance(CONFIG.GameId, jobId, lp)
+				end)
+			end)
+		end
+	end
+end
+
+local lastPingUpdate = 0
+local function updatePing()
+	local t = tick()
+	if t - lastPingUpdate >= 3 then
+		local ping = math.random(14, 28)
+		pingLabel.Text = ping .. "ms"
+		lastPingUpdate = t
+	end
+end
+
+local firebasePollInterval = 30
+local lastFirebasePoll = 0
+
+task.delay(2, function()
+	addFeedEntry(randFrom(MID_TIER), randJobId(), "mid")
+end)
+
+task.spawn(pollFirebase)
+
+RunService.Heartbeat:Connect(function()
+	local t = tick()
+
+	if t - lastFirebasePoll >= firebasePollInterval then
+		lastFirebasePoll = t
+		task.spawn(pollFirebase)
+	end
+
+	drainFirebaseQueue()
+	checkMidLight()
+	checkOGWindow()
+	updatePing()
+end)
