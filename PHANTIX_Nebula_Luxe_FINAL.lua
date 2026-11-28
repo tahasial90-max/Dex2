@@ -52,7 +52,7 @@ local PHANTIX_VERSION = "0.4.0"
 -- AuthToken hier NICHT veröffentlichen. Besser vor dem Start getgenv().PHANTIX_AUTH_TOKEN setzen.
 local AI_CONFIG = {
     WorkerUrl = "https://broad-term-eb1f.taahasial90.workers.dev",
-    AuthToken = "PASTE_A_NEW_ROTATED_AUTH_TOKEN_HERE",
+    AuthToken = "ff665412b2153218d7682c8c6e6ab1aa57814a8b17615996",
     TimeoutSeconds = 28,   -- der Worker bricht Gemini nach 25 s ab
     MaxAttempts = 2,       -- 1 Wiederholung, nur bei vorübergehenden Fehlern
     CooldownSeconds = 2.5, -- Mindestabstand zwischen zwei Cloudflare-Anfragen
